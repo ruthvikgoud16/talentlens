@@ -1,0 +1,81 @@
+# Redrob Hackathon — Submission Metadata
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "TalentLens"
+
+primary_contact:
+  name: "Ruthvik Goud"
+  email: "bathiniruthvik370@gamil.com"   # REPLACE with your real email
+  phone: "+91-9392796458"        # REPLACE with your real phone number
+
+team_members:
+  - name: "Ruthvik Goud"
+    email: "bathiniruthvik370@gmail.com" # REPLACE with your real email
+    role: "Team Lead"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/ruthvikgoud16/talentlens"
+
+sandbox_link: "https://colab.research.google.com/drive/YOUR_COLAB_LINK"
+# REPLACE with your actual Colab link after uploading (we will do this next)
+
+reproduce_command: "python app.py"
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Dell 2-in-1 Laptop, Windows 11"
+  cpu_cores: 4
+  ram_gb: 16
+  python_version: "3.14"
+  os: "Windows 11"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude for architectural discussion, schema analysis, and code review.
+  Claude read the actual candidates.jsonl file to confirm the real data schema
+  before any code was written. No candidate data was fed to any LLM during
+  ranking. All scoring logic runs locally with no API calls.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  TalentLens is a recruiter-style candidate ranking engine built around signals
+  explicitly mentioned in the job description. Four weighted scoring engines:
+  Career Evidence & Trajectory (30%) rewards production deployments in
+  retrieval/search/ranking and penalizes consulting-only backgrounds explicitly
+  named as disqualifiers in the JD. Recruitability Index (35%) weights candidate
+  recency, response rate, notice period, and open-to-work status — built on the
+  JD's own statement that an inactive candidate is not actually available.
+  Explicit Skill Relevance (20%) separates must-have skills (embeddings, vector
+  databases, retrieval) from nice-to-haves using proficiency and duration as
+  quality signals, not just keyword presence. Semantic Match (15%) uses TF-IDF
+  cosine similarity fitted once across all 100,000 candidates. A contradiction
+  detection engine applies penalties for honeypot profiles where headline claims
+  are unsupported by career history. Runtime is approximately 3 minutes for
+  100,000 candidates on CPU with 16GB RAM.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true
