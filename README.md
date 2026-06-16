@@ -1,6 +1,19 @@
 # 🚀 TalentLens X // Aether Protocol
 *The Post-Resume Era of Human Potential Matchmaking & Verification*
 
+---
+
+### 🏆 Hackathon Submission Details
+
+* **GitHub Repository:** [https://github.com/ruthvikgoud16/talentlens](https://github.com/ruthvikgoud16/talentlens)
+* **Demo Video Animation:** [https://github.com/ruthvikgoud16/talentlens/raw/main/assets/aether_demo_flow.webp](https://github.com/ruthvikgoud16/talentlens/raw/main/assets/aether_demo_flow.webp)
+* **Prototype / Live Demo:** [talentlens_x.html](talentlens_x.html) *(Double-click to run locally in any browser)*
+* **Key Achievement:** AI-powered dynamic sandbox trials and cognitive twin mapping replacing static resume-based screening.
+* **Tech Stack:** HTML5, CSS3, JavaScript (ES6+ Canvas), Python 3, FastAPI
+* **Contact Email:** [bathiniruthvik370@gmail.com](mailto:bathiniruthvik370@gmail.com)
+
+---
+
 TalentLens has evolved from a static resume-ranking script into **TalentLens X (Aether)**—a decentralized, first-principles protocol designed to discover, measure, verify, and match human potential dynamically, bypassing resumes and traditional ATS systems.
 
 ---
