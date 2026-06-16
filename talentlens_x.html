@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER // TalentLens X — Human Potential Protocol</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #08090d;
+            --bg-card: rgba(17, 20, 28, 0.75);
+            --bg-sidebar: rgba(10, 12, 18, 0.9);
+            --accent-cyan: #00f2fe;
+            --accent-cyan-glow: rgba(0, 242, 254, 0.35);
+            --accent-green: #00f5a0;
+            --accent-green-glow: rgba(0, 245, 160, 0.35);
+            --accent-purple: #9d4edd;
+            --accent-purple-glow: rgba(157, 78, 221, 0.35);
+            --text-main: #f8f9fa;
+            --text-muted: #8e9aa8;
+            --border-glow: rgba(0, 242, 254, 0.15);
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(157, 78, 221, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 242, 254, 0.08) 0%, transparent 40%);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 24px;
+            background: rgba(8, 9, 13, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 100;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-glyph {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 0 15px var(--accent-cyan-glow);
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        .logo-glyph::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            background: var(--bg-deep);
+            border-radius: 5px;
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #ffffff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green-glow);
+        }
+
+        .status-dot.pulsing {
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        /* App Layout */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Left Panel: Agent Team Communications */
+        .panel-left {
+            width: 320px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .channel-list {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .channel-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .channel-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
+        }
+
+        .channel-item.active {
+            background: rgba(0, 242, 254, 0.08);
+            border-left: 3px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .badge-pulse {
+            background: var(--accent-cyan);
+            color: var(--bg-deep);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 800;
+            box-shadow: 0 0 8px var(--accent-cyan-glow);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-bubble {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 90%;
+        }
+
+        .message-bubble.incoming {
+            align-self: flex-start;
+        }
+
+        .message-bubble.outgoing {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .msg-sender {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .msg-sender.pm {
+            color: var(--accent-purple);
+        }
+
+        .msg-sender.lead {
+            color: var(--accent-cyan);
+        }
+
+        .msg-time {
+            color: var(--text-muted);
+        }
+
+        .msg-text {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--text-main);
+        }
+
+        .message-bubble.incoming .msg-text {
+            border-top-left-radius: 2px;
+        }
+
+        .message-bubble.outgoing .msg-text {
+            background: rgba(0, 242, 254, 0.05);
+            border-color: rgba(0, 242, 254, 0.15);
+            border-top-right-radius: 2px;
+        }
+
+        .chat-input-wrapper {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #ffffff;
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-send {
+            background: var(--accent-cyan);
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-deep);
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px var(--accent-cyan-glow);
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+        }
+
+        /* Center Panel: Sandbox IDE & Execution Terminal */
+        .panel-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(5, 5, 8, 0.5);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ide-tabs {
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-item {
+            padding: 12px 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .tab-item.active {
+            background: var(--bg-deep);
+            color: #ffffff;
+            border-bottom: 2px solid var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .tab-icon {
+            color: #e28743; /* Python orange */
+        }
+
+        .ide-editor-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            background: var(--bg-deep);
+        }
+
+        .line-numbers {
+            width: 45px;
+            padding: 16px 0;
+            text-align: right;
+            padding-right: 12px;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .editor-textarea-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            color: #e0e0e0;
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            padding: 16px;
+            overflow-y: auto;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        .action-bar {
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-ide {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ide:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-ide.primary {
+            background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
+            border: none;
+            color: var(--bg-deep);
+            font-weight: 700;
+            box-shadow: 0 0 12px var(--accent-cyan-glow);
+        }
+
+        .btn-ide.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 18px var(--accent-cyan-glow);
+        }
+
+        .panel-terminal {
+            height: 220px;
+            background: #040508;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 12px 16px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            overflow-y: auto;
+            color: #39ff14; /* Matrix Green */
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+        }
+
+        .terminal-line.info {
+            color: var(--text-muted);
+        }
+
+        .terminal-line.error {
+            color: #ff4757;
+        }
+
+        .terminal-line.success {
+            color: var(--accent-green);
+        }
+
+        /* Right Panel: Cognitive Twin Dashboard */
+        .panel-right {
+            width: 380px;
+            background: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .section-header h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+
+        .graph-container {
+            height: 250px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        #graph-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .graph-instructions {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.6);
+            padding: 3px 8px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .metric-cards {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--accent-cyan-glow);
+            background: rgba(255, 255, 255, 0.03);
+            transform: translateX(3px);
+        }
+
+        .metric-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: var(--font-code);
+            color: var(--accent-cyan);
+        }
+
+        .metric-value.purple {
+            color: var(--accent-purple);
+        }
+
+        .metric-value.green {
+            color: var(--accent-green);
+        }
+
+        .progress-bar-wrapper {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--accent-cyan), #00b4d8);
+            border-radius: 2px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-bar-fill.purple {
+            background: linear-gradient(to right, var(--accent-purple), #7209b7);
+        }
+
+        .progress-bar-fill.green {
+            background: linear-gradient(to right, var(--accent-green), #03b585);
+        }
+
+        .insight-box {
+            margin: 0 20px 20px 20px;
+            background: rgba(0, 242, 254, 0.03);
+            border: 1px solid rgba(0, 242, 254, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .insight-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .insight-text {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 10px var(--accent-cyan-glow);
+                filter: brightness(1);
+            }
+            50% {
+                box-shadow: 0 0 20px var(--accent-cyan-glow);
+                filter: brightness(1.2);
+            }
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-logo">
+            <div class="logo-glyph"></div>
+            <div class="logo-text">
+                <h1>AETHER</h1>
+                <span>Human Potential Protocol v0.35</span>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot pulsing"></div>
+                <span>Ledger Synced</span>
+            </div>
+            <div class="status-item">
+                <span>Cognitive Twin: <strong>Active</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Panel Left: Communication channels and team simulation -->
+        <div class="panel-left">
+            <div class="channel-list">
+                <div class="section-title">Evaluation Rooms</div>
+                <div class="channel-item active">
+                    <span>#dev-crisis-room</span>
+                    <span class="badge-pulse" id="unread-count">1</span>
+                </div>
+                <div class="channel-item">
+                    <span>#architecture-specs</span>
+                </div>
+                <div class="channel-item">
+                    <span>#forensic-logs</span>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-box">
+                    <!-- Dynamic chat messages go here -->
+                </div>
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" id="chat-user-input" placeholder="Discuss logic with agents...">
+                    <button class="btn-send" id="btn-chat-send">></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Center: WebIDE and Live Terminal -->
+        <div class="panel-center">
+            <div class="ide-tabs">
+                <div class="tab-item active">
+                    <span class="tab-icon">🐍</span>
+                    <span>payment_service.py</span>
+                </div>
+            </div>
+
+            <div class="ide-editor-container">
+                <div class="line-numbers" id="line-numbers-container">
+                    <!-- Line numbers populated by JS -->
+                </div>
+                <div class="editor-textarea-wrapper">
+                    <textarea class="editor-textarea" id="editor" spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn-ide" id="btn-revert">Revert Changes</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-ide" id="btn-diagnose">Run Diagnostics</button>
+                    <button class="btn-ide primary" id="btn-deploy">Deploy Patch & Commit</button>
+                </div>
+            </div>
+
+            <div class="panel-terminal">
+                <div class="terminal-header">
+                    <span>SANDBOX RUNNER TERMINAL</span>
+                    <span id="terminal-status">IDLE</span>
+                </div>
+                <div class="terminal-content" id="terminal-box">
+                    <div class="terminal-line info">Aether Sandboxed Workspace Provisioned. Ready for evaluation.</div>
+                    <div class="terminal-line info">Type code above and hit "Run Diagnostics" to compile.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Right: Visual Cognitive Twin Graph & Analytics -->
+        <div class="panel-right">
+            <div class="section-header">
+                <h2>Cognitive Twin Mapping</h2>
+            </div>
+            
+            <div class="graph-container">
+                <canvas id="graph-canvas"></canvas>
+                <div class="graph-instructions">Drag nodes to explore semantic linkages</div>
+            </div>
+
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-label">Technical Mastery</span>
+                        <span class="metric-value" id="val-mastery">65%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill" id="bar-mastery" style="width: 65%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-label">Adaptability Quotient</span>
+                        <span class="metric-value purple" id="val-adapt">50%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill purple" id="bar-adapt" style="width: 50%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-info">
+                        <span class="metric-label">Collaboration & Communication</span>
+                        <span class="metric-value green" id="val-collab">70%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill green" id="bar-collab" style="width: 70%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">
+                    <span>💡 Live Behavioral Insight</span>
+                </div>
+                <div class="insight-text" id="insight-text">
+                    Aether is tracking your editing habits. Fix the load-handling and string validation errors in the payments module.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default code with validation bug
+        const initialCode = `def process_payment(payload):
+    """
+    TODO: Fix the validation bug here!
+    The payload contains 'amount_cents' but sometimes it is passed as a string (e.g. "5000").
+    The calculation crashes with TypeErrors under load.
+    
+    Current auth headers also need updates per client specification changes.
+    """
+    amount = payload.get('amount_cents')
+    
+    if not amount:
+        raise ValueError("Invalid amount")
+        
+    # BUG: If 'amount' is a string, multiplying it duplicates the characters
+    # instead of performing mathematical operations, crashing the flow below.
+    tax = amount * 0.18
+    total = amount + tax
+    
+    # AUTHENTICATION HEADER LOGIC
+    # The client specification recently updated:
+    # Must use "Authorization": "Bearer <key>" instead of "X-Api-Key": "<key>"
+    headers = {
+        "X-Api-Key": payload.get("api_key")
+    }
+    
+    return {
+        "status": "success",
+        "total": total,
+        "headers": headers
+    }`;
+
+        // Elements
+        const editor = document.getElementById('editor');
+        const lineNumbersContainer = document.getElementById('line-numbers-container');
+        const terminalBox = document.getElementById('terminal-box');
+        const terminalStatus = document.getElementById('terminal-status');
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-user-input');
+        const btnSendChat = document.getElementById('btn-chat-send');
+        const unreadCount = document.getElementById('unread-count');
+        const insightText = document.getElementById('insight-text');
+
+        // Metrics elements
+        const valMastery = document.getElementById('val-mastery');
+        const valAdapt = document.getElementById('val-adapt');
+        const valCollab = document.getElementById('val-collab');
+        const barMastery = document.getElementById('bar-mastery');
+        const barAdapt = document.getElementById('bar-adapt');
+        const barCollab = document.getElementById('bar-collab');
+
+        // State variables
+        let isTaskFixed = false;
+        let isAuthFixed = false;
+        let isCrisisTriggered = false;
+        let dialogStep = 0;
+
+        // Initialize editor
+        editor.value = initialCode;
+        updateLineNumbers();
+
+        // Listeners
+        editor.addEventListener('input', () => {
+            updateLineNumbers();
+        });
+
+        editor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+                updateLineNumbers();
+            }
+        });
+
+        document.getElementById('btn-revert').addEventListener('click', () => {
+            editor.value = initialCode;
+            updateLineNumbers();
+            logTerminal("Code reverted to workspace state.", "info");
+        });
+
+        document.getElementById('btn-diagnose').addEventListener('click', runDiagnostics);
+        document.getElementById('btn-deploy').addEventListener('click', deployPatch);
+        btnSendChat.addEventListener('click', sendUserMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendUserMessage();
+        });
+
+        // Functions
+        function updateLineNumbers() {
+            const lines = editor.value.split('\n').length;
+            let numHtml = '';
+            for (let i = 1; i <= lines; i++) {
+                numHtml += `${i}<br>`;
+            }
+            lineNumbersContainer.innerHTML = numHtml;
+        }
+
+        function logTerminal(text, type = "info") {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            
+            // Format timestamp
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            line.innerHTML = `<span style="color: rgba(255,255,255,0.3)">[${timeStr}]</span> ${text}`;
+            
+            terminalBox.appendChild(line);
+            terminalBox.scrollTop = terminalBox.scrollHeight;
+        }
+
+        // Mock Sandbox Compile and Execution Tests
+        function runDiagnostics() {
+            terminalStatus.innerHTML = "COMPILING...";
+            terminalStatus.style.color = "var(--accent-cyan)";
+            logTerminal("Spawning isolated ephemeral sandbox container...", "info");
+            
+            setTimeout(() => {
+                const code = editor.value;
+                logTerminal("Running static lint checks... Passed.", "info");
+                logTerminal("Running test case 1: Standard integer payloads...", "info");
+                
+                // Simple regex matches to evaluate correctness for the user hackathon demo
+                const amountCastPattern = /(?:float|int)\(\s*payload\.get\(\s*['"]amount_cents['"]\s*\)/i;
+                const amountCastVarPattern = /(?:float|int)\(\s*amount\s*\)/i;
+                
+                const usesAuthorization = /['"]Authorization['"]\s*:\s*(?:f['"]Bearer\s*\{.*\}['"]|['"]Bearer\s*['"]\s*\+\s*.*)/i;
+
+                let testCase1 = true; // Int test
+                let testCase2 = false; // String test
+                let testCase3 = false; // Auth key test
+                
+                if (amountCastPattern.test(code) || amountCastVarPattern.test(code)) {
+                    testCase2 = true;
+                }
+                
+                if (usesAuthorization.test(code)) {
+                    testCase3 = true;
+                }
+
+                logTerminal("  - [PASS] Test 1: Int amount processed successfully.", "success");
+                
+                setTimeout(() => {
+                    logTerminal("Running test case 2: Stringified numeric inputs (amount_cents: '5000')...", "info");
+                    if (testCase2) {
+                        logTerminal("  - [PASS] Test 2: Correctly parsed string payload into numerical parameters.", "success");
+                        isTaskFixed = true;
+                        updateMetric('mastery', 85);
+                    } else {
+                        logTerminal("  - [FAIL] Test 2: Process crashed with TypeError: can't multiply sequence by non-int of type 'float'.", "error");
+                        isTaskFixed = false;
+                    }
+                    
+                    setTimeout(() => {
+                        logTerminal("Running test case 3: Authentication header validation...", "info");
+                        if (testCase3) {
+                            logTerminal("  - [PASS] Test 3: Verified Client API Authorization Bearer layout compliance.", "success");
+                            isAuthFixed = true;
+                            updateMetric('adapt', 95);
+                        } else {
+                            if (isCrisisTriggered) {
+                                logTerminal("  - [FAIL] Test 3: Client header mismatch. Header layout expects Bearer token Authorization scheme.", "error");
+                            } else {
+                                logTerminal("  - [PASS] Test 3: Header validated (Fallback header default legacy).", "success");
+                            }
+                            isAuthFixed = false;
+                        }
+
+                        // Conclude diagnostics
+                        setTimeout(() => {
+                            if (isTaskFixed && (!isCrisisTriggered || isAuthFixed)) {
+                                terminalStatus.innerHTML = "PASSED";
+                                terminalStatus.style.color = "var(--accent-green)";
+                                logTerminal("ALL DIAGNOSTIC SUITES VERIFIED. System healthy and optimized.", "success");
+                                updateMetric('mastery', 90);
+                                if (isCrisisTriggered && isAuthFixed) {
+                                    updateMetric('adapt', 95);
+                                    triggerAgentMessage("lead", "Dave (Lead Architect)", "Awesome refactoring! Tests passed and auth header satisfies the updated client gateway spec. Deploy this patch when ready.");
+                                } else if (!isCrisisTriggered) {
+                                    triggerCrisisEvent();
+                                }
+                            } else {
+                                terminalStatus.innerHTML = "FAILED";
+                                terminalStatus.style.color = "#ff4757";
+                                logTerminal("DIAGNOSTICS COMPILATION FAILED. Fix compiler errors before commit.", "error");
+                            }
+                        }, 500);
+
+                    }, 400);
+                }, 400);
+
+            }, 800);
+        }
+
+        function deployPatch() {
+            if (!isTaskFixed) {
+                logTerminal("[ABORT] Cannot deploy buggy sandbox state to main trunk. Run diagnostics successfully first.", "error");
+                return;
+            }
+            if (isCrisisTriggered && !isAuthFixed) {
+                logTerminal("[ABORT] Legacy authentication headers detected. Deployment blocked by system gatekeeper.", "error");
+                return;
+            }
+
+            logTerminal("Submitting Proof-of-Ability receipt to cryptographic ledger...", "info");
+            setTimeout(() => {
+                logTerminal("Deploying payload container patch version v1.02.4...", "info");
+                setTimeout(() => {
+                    logTerminal("TRANSACTION RECORDED. Code changes signed, verified, and pushed successfully.", "success");
+                    updateMetric('mastery', 100);
+                    updateMetric('collab', 90);
+                    triggerAgentMessage("pm", "Sarah (Product Manager)", "Wow, patch deployed! Client is calling off the alert status. Great response time and solid code adaptability. Twin matrix locked.");
+                    insightText.innerHTML = "<strong>Congratulations!</strong> You have successfully solved the Sandbox simulation trial. Your Cognitive Twin metrics have been finalized and linked to the potential pool.";
+                }, 1000);
+            }, 600);
+        }
+
+        // Crisis Management Dialogue Injector
+        function triggerCrisisEvent() {
+            isCrisisTriggered = true;
+            unreadCount.style.display = "inline-block";
+            unreadCount.innerHTML = "1";
+            
+            setTimeout(() => {
+                triggerAgentMessage("pm", "Sarah (Product Manager)", "Wait! Team, billing provider just pinged us. They changed their auth format. Legacy key header is disabled. Dave, what's our move?");
+                setTimeout(() => {
+                    triggerAgentMessage("lead", "Dave (Lead Architect)", "Our sandbox candidate can pivot this. In payment_service.py, replace 'X-Api-Key' layout with 'Authorization: Bearer <key>' schema in the returned payload mapping.");
+                    insightText.innerHTML = "<strong>CRISIS EVENT DETECTED:</strong> PM and Lead Architect updated the issue spec. Modify the authentication header construction to conform to the Bearer schema.";
+                    updateMetric('adapt', 65);
+                }, 2000);
+            }, 1000);
+        }
+
+        function triggerAgentMessage(role, sender, text) {
+            const bubble = document.createElement('div');
+            bubble.className = "message-bubble incoming";
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            bubble.innerHTML = `
+                <div class="msg-meta">
+                    <span class="msg-sender ${role}">${sender}</span>
+                    <span class="msg-time">${timeStr}</span>
+                </div>
+                <div class="msg-text">${text}</div>
+            `;
+            
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendUserMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            const bubble = document.createElement('div');
+            bubble.className = "message-bubble outgoing";
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            bubble.innerHTML = `
+                <div class="msg-meta">
+                    <span class="msg-sender">Candidate (You)</span>
+                    <span class="msg-time">${timeStr}</span>
+                </div>
+                <div class="msg-text">${text}</div>
+            `;
+            
+            chatBox.appendChild(bubble);
+            chatInput.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            updateMetric('collab', Math.min(parseInt(valCollab.innerHTML) + 3, 98));
+
+            // Small responsive agent replies to candidate comments
+            setTimeout(() => {
+                if (text.toLowerCase().includes("auth") || text.toLowerCase().includes("header") || text.toLowerCase().includes("bearer")) {
+                    triggerAgentMessage("lead", "Dave (Lead Architect)", "Right. Return headers={'Authorization': f'Bearer {payload.get(\"api_key\")}'}. That is the specific Bearer token scheme.");
+                } else if (text.toLowerCase().includes("done") || text.toLowerCase().includes("fixed") || text.toLowerCase().includes("bug")) {
+                    triggerAgentMessage("pm", "Sarah (Product Manager)", "Awesome, run the Diagnostics to verify it against the test suite!");
+                } else {
+                    triggerAgentMessage("pm", "Sarah (Product Manager)", "Acknowledged. Let's make sure the sandbox tests are green and push the commit.");
+                }
+            }, 1000);
+        }
+
+        function updateMetric(metric, value) {
+            if (metric === 'mastery') {
+                valMastery.innerHTML = `${value}%`;
+                barMastery.style.width = `${value}%`;
+            } else if (metric === 'adapt') {
+                valAdapt.innerHTML = `${value}%`;
+                barAdapt.style.width = `${value}%`;
+            } else if (metric === 'collab') {
+                valCollab.innerHTML = `${value}%`;
+                barCollab.style.width = `${value}%`;
+            }
+        }
+
+        // Initialize Chat Intro
+        setTimeout(() => {
+            triggerAgentMessage("pm", "Sarah (Product Manager)", "Hi there! Welcome to the Aether Sandbox environment. We've got a critical checkout system ticket. Checkout attempts crash under sudden load.");
+            setTimeout(() => {
+                triggerAgentMessage("pm", "Sarah (Product Manager)", "Check the code in payment_service.py. Write validation for amount values and click 'Run Diagnostics'. Let's coordinate here.");
+            }, 1000);
+        }, 500);
+
+
+        // --- HTML5 CANVAS 2D NODE GRAPH ENGINE ---
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let nodes = [];
+        let links = [];
+        let width = canvas.offsetWidth;
+        let height = canvas.offsetHeight;
+        let selectedNode = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Custom Resize handling
+        window.addEventListener('resize', () => {
+            width = canvas.offsetWidth;
+            height = canvas.offsetHeight;
+            canvas.width = width;
+            canvas.height = height;
+        });
+
+        class Node {
+            constructor(id, label, x, y, size, color) {
+                this.id = id;
+                this.label = label;
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+                this.vx = 0;
+                this.vy = 0;
+                this.pulse = 0;
+            }
+
+            draw() {
+                this.pulse += 0.05;
+                const pulseSize = this.size + Math.sin(this.pulse) * 1.5;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseSize + 4, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + '18';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 10px Plus Jakarta Sans';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.label, this.x, this.y + this.size + 15);
+            }
+        }
+
+        // Initialize node list
+        function initGraph() {
+            nodes.push(new Node(1, 'Python Core', width * 0.5, height * 0.5, 12, '#00f2fe'));
+            nodes.push(new Node(2, 'Embeddings', width * 0.35, height * 0.35, 10, '#9d4edd'));
+            nodes.push(new Node(3, 'Vector Search', width * 0.65, height * 0.35, 9, '#9d4edd'));
+            nodes.push(new Node(4, 'API Design', width * 0.45, height * 0.7, 8, '#00f5a0'));
+            nodes.push(new Node(5, 'Outage Management', width * 0.25, height * 0.65, 8, '#ff4757'));
+            nodes.push(new Node(6, 'Cognitive Adaptability', width * 0.75, height * 0.65, 11, '#ff9f43'));
+
+            links.push({ source: 1, target: 2 });
+            links.push({ source: 1, target: 3 });
+            links.push({ source: 1, target: 4 });
+            links.push({ source: 4, target: 5 });
+            links.push({ source: 1, target: 6 });
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw link lines
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            links.forEach(link => {
+                const s = nodes.find(n => n.id === link.source);
+                const t = nodes.find(n => n.id === link.target);
+                if (s && t) {
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.lineTo(t.x, t.y);
+                    ctx.stroke();
+                }
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                node.draw();
+            });
+
+            requestAnimationFrame(drawGraph);
+        }
+
+        // Interactive Drag Events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mX = e.clientX - rect.left;
+            const mY = e.clientY - rect.top;
+
+            selectedNode = nodes.find(n => {
+                const dist = Math.sqrt((n.x - mX) ** 2 + (n.y - mY) ** 2);
+                return dist < n.size + 10;
+            });
+
+            if (selectedNode) {
+                dragOffset.x = selectedNode.x - mX;
+                dragOffset.y = selectedNode.y - mY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (selectedNode) {
+                const rect = canvas.getBoundingClientRect();
+                selectedNode.x = e.clientX - rect.left + dragOffset.x;
+                selectedNode.y = e.clientY - rect.top + dragOffset.y;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            selectedNode = null;
+        });
+
+        initGraph();
+        drawGraph();
+    </script>
+</body>
+</html>

@@ -267,27 +267,44 @@ def extract_features(cand):
 # 4. SCORING ENGINES
 # ─────────────────────────────────────────────
 
+def normalize_skill(name):
+    name = name.lower().strip()
+    name = name.replace("machine learning", "ml")
+    name = name.replace("natural language processing", "nlp")
+    name = name.replace("deep learning", "dl")
+    name = "".join(c for c in name if c.isalnum())
+    if name.endswith("s") and not name.endswith("ss"):
+        name = name[:-1]
+    return name
+
+
+def is_skill_match(target, candidate):
+    norm_target = normalize_skill(target)
+    norm_cand = normalize_skill(candidate)
+    return (norm_target in norm_cand) or (norm_cand in norm_target)
+
+
 def score_career(feat):
     """
-    Career Evidence & Trajectory (30% weight)
+    Career Evidence & Trajectory (35% weight)
     
     JD signals:
     - Wants 5-9 years, product companies preferred
-    - Explicitly penalizes: consulting-only backgrounds, non-tech careers
+    - Explicitly penalizes: consulting-only backgrounds, non-tech careers, and non-domain fields
     - Rewards: production deployments, domain relevance (retrieval/search/ranking)
-    - Penalizes: pure research without production, recent LangChain-only projects
     """
     years    = feat["years_exp"]
     titles   = feat["titles"]
     companies= feat["companies"]
     combined = feat["combined_desc"]
+    headline = feat["headline"]
+    current_title = feat["current_title"]
 
     # ── Experience scale: JD wants 5-9 years ──
-    # Sweet spot 5-9 years gets full credit; outside range gets partial
     if 5 <= years <= 9:
         exp_scale = 1.0
     elif years > 9:
-        exp_scale = 0.85   # over-experienced, may not fit startup stage
+        exp_scale = 0.85   # over-experienced
     elif 3 <= years < 5:
         exp_scale = 0.75
     elif years > 0:
@@ -321,27 +338,33 @@ def score_career(feat):
     prod_hits   = sum(1 for kw in PRODUCTION_KW if kw in combined)
     domain_hits = sum(1 for kw in DOMAIN_KW if kw in combined)
 
-    # ── Consulting firm penalty (JD is explicit: consulting-only is a disqualifier) ──
+    # ── Consulting firm penalty (ratio-based) ──
     consulting_penalty = 0.0
     if companies:
-        all_consulting = all(any(cf in c for cf in CONSULTING_FIRMS) for c in companies if c)
-        if all_consulting and companies:
-            consulting_penalty = 30.0  # heavy but not total — if they have domain evidence it can overcome
+        consulting_count = sum(1 for c in companies if any(cf in str(c) for cf in CONSULTING_FIRMS))
+        ratio = consulting_count / len(companies)
+        if ratio > 0:
+            consulting_penalty = ratio * 40.0
 
-    base = min((prod_hits * 7.0) + (domain_hits * 8.0), 100.0)
+    # ── Non-domain Title Penalty (CV, Speech, Robotics are wrong fit) ──
+    non_domain_title_penalty = 0.0
+    non_domain_titles = ["computer vision", "speech", "robotics", "cv engineer", "vision researcher", "object detection", "image processing"]
+    if any(ndt in current_title for ndt in non_domain_titles) or any(ndt in headline for ndt in non_domain_titles):
+        non_domain_title_penalty = 45.0
+
+    base = min((prod_hits * 8.0) + (domain_hits * 9.0), 100.0)
     raw  = base * exp_scale * trajectory_mult
-    final = max(0.0, raw - consulting_penalty)
+    final = max(0.0, raw - consulting_penalty - non_domain_title_penalty)
     return round(min(final, 100.0), 2), prod_hits, domain_hits
 
 
 def score_skills(feat):
     """
-    Skill Relevance (20% weight)
+    Skill Relevance (25% weight)
     
     Weights skills from JD must-haves higher than nice-to-haves.
-    Uses proficiency and endorsements as quality signal.
-    Adds bonus for verified assessment scores.
-    Penalizes non-domain skills (CV/speech/robotics per JD).
+    Uses normalized matching to avoid hyphen/spacing/spelling issues.
+    Capped at a realistic ceiling so stellar candidates can score 100%.
     """
     skills_meta = feat["skills_meta"]
     assessments = feat["assessments"]
@@ -351,7 +374,8 @@ def score_skills(feat):
     matched = []
 
     for skill_name, weight in ALL_TARGET_SKILLS.items():
-        match = next((s for s in skills_meta if skill_name in s["name"]), None)
+        # Match using normalized check
+        match = next((s for s in skills_meta if is_skill_match(skill_name, s["name"])), None)
         if match:
             matched.append(skill_name)
             # Proficiency multiplier
@@ -360,14 +384,14 @@ def score_skills(feat):
             dur_mult = 1.1 if match["dur"] >= 12 else 0.9
             earned += weight * prof_mult * dur_mult
 
-    base = (earned / MAX_SKILL_WEIGHT) * 100.0
+    # Define a realistic skill ceiling (perfect fit doesn't need to match all 25+ skills)
+    SKILL_CEILING_WEIGHT = 13.0
+    base = min((earned / SKILL_CEILING_WEIGHT) * 100.0, 100.0)
 
-    # Assessment score bonus (verified skills from platform tests)
+    # Assessment score bonus
     if assessments:
-        avg_assess = sum(assessments.values()) / len(assessments)
-        # Only bonus if the assessed skills are relevant
         relevant_assess = {k: v for k, v in assessments.items()
-                          if any(t in k.lower() for t in list(ALL_TARGET_SKILLS.keys()))}
+                           if any(is_skill_match(t, k) for t in list(ALL_TARGET_SKILLS.keys()))}
         if relevant_assess:
             bonus = (sum(relevant_assess.values()) / len(relevant_assess) / 100.0) * 8.0
         else:
@@ -375,13 +399,12 @@ def score_skills(feat):
     else:
         bonus = 0.0
 
-    # Non-domain skill penalty: JD says CV/speech/robotics people are wrong fit
+    # Non-domain skill penalty (always penalize, do not skip if relevant_count > 0)
     non_domain_penalty = 0.0
     non_domain_count = sum(1 for nd in NON_DOMAIN_SKILLS
-                          if any(nd in s for s in skills_list))
-    relevant_count = len(matched)
-    if non_domain_count > 0 and relevant_count == 0:
-        non_domain_penalty = min(non_domain_count * 5.0, 20.0)
+                          if any(is_skill_match(nd, s) for s in skills_list))
+    if non_domain_count > 0:
+        non_domain_penalty = min(non_domain_count * 10.0, 30.0)
 
     final = min(base + bonus, 100.0) - non_domain_penalty
     return round(max(0.0, final), 2), matched
@@ -591,11 +614,11 @@ def main():
         penalty, risk_reasons                 = score_honeypot_penalty(feat)
 
         # Weighted aggregate per design
-        # Weights: Career 30%, Recruitability 35%, Skills 20%, Semantic 15%
+        # Weights: Career 35%, Recruitability 25%, Skills 25%, Semantic 15%
         weighted = (
-            career_score   * 0.30 +
-            recruit_index  * 0.35 +
-            skill_score    * 0.20 +
+            career_score   * 0.35 +
+            recruit_index  * 0.25 +
+            skill_score    * 0.25 +
             semantic       * 0.15
         )
         final_score = round(max(0.0, weighted - (penalty * 0.10)), 4)
