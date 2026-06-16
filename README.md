@@ -67,6 +67,12 @@ An interactive, self-contained mockup of the 2035 **Aether Protocol** workspace.
 * **Sandbox Terminal:** A live logs terminal displaying compile status, lint outputs, and test results.
 * **Cognitive Twin Canvas:** A dynamic node-link graph mapping candidate mastery fields in real-time.
 
+### 📸 Simulation Walkthrough
+
+| 1. Initial State | 2. Diagnostics Failure | 3. Deployment Success |
+| :---: | :---: | :---: |
+| ![Initial Workspace](assets/dashboard_initial.png) | ![Diagnostics Failure](assets/diagnostics_failed.png) | ![Deployment Success](assets/deployment_success.png) |
+
 ---
 
 ## 🏃 Running the Code
