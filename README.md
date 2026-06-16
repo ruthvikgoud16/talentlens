@@ -73,6 +73,9 @@ An interactive, self-contained mockup of the 2035 **Aether Protocol** workspace.
 | :---: | :---: | :---: |
 | ![Initial Workspace](assets/dashboard_initial.png) | ![Diagnostics Failure](assets/diagnostics_failed.png) | ![Deployment Success](assets/deployment_success.png) |
 
+#### 🎥 Interactive Walkthrough Demo
+![Aether Demo Walkthrough](assets/aether_demo_flow.webp)
+
 ---
 
 ## 🏃 Running the Code
