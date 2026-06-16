@@ -1,170 +1,89 @@
-# talentlens
-# 🚀 TalentLens – AI-Powered Recruitment Intelligence Platform
+# 🚀 TalentLens X // Aether Protocol
+*The Post-Resume Era of Human Potential Matchmaking & Verification*
 
-TalentLens is an AI-powered recruitment intelligence platform that transforms traditional hiring into a data-driven process. By leveraging Natural Language Processing (NLP), Machine Learning, and Large Language Models (LLMs), TalentLens helps recruiters identify top talent faster while providing candidates with actionable career insights.
-
----
-
-## 🎯 Problem Statement
-
-Traditional recruitment relies heavily on manual resume screening and keyword-based filtering. This approach is:
-
-* Time-consuming for recruiters
-* Prone to missing qualified candidates
-* Limited in understanding context and transferable skills
-* Inefficient at identifying skill gaps and growth potential
-
-TalentLens addresses these challenges by analyzing candidate profiles intelligently and generating meaningful insights beyond simple keyword matching.
+TalentLens has evolved from a static resume-ranking script into **TalentLens X (Aether)**—a decentralized, first-principles protocol designed to discover, measure, verify, and match human potential dynamically, bypassing resumes and traditional ATS systems.
 
 ---
 
-## ✨ Features
+## 💡 The First-Principles Shift
 
-### 🤖 AI Resume Analysis
+Traditional recruitment is a **dynamic resource-allocation problem** that the industry treats as a **static keyword-filtering problem**. Resumes are historical self-promotional text; ATS platforms are search string-matching gatekeepers; and "Years of Experience" is an inaccurate proxy for learning velocity.
 
-* Resume parsing and information extraction
-* Skill identification and categorization
-* Experience and education analysis
-* Candidate summary generation
-
-### 📊 Candidate Intelligence
-
-* AI-generated candidate profiles
-* Skill strength assessment
-* Career progression insights
-* Candidate ranking and evaluation
-
-### 🎯 Job Matching
-
-* Match candidates against job descriptions
-* Generate compatibility scores
-* Highlight matching and missing skills
-* Explain recommendations transparently
-
-### 📈 Skill Gap Analysis
-
-* Identify missing competencies
-* Recommend learning paths
-* Suggest certifications and upskilling opportunities
-
-### 📋 Recruiter Dashboard
-
-* Candidate management
-* Search and filtering
-* Analytics and hiring insights
-* Intelligent recommendations
+TalentLens X dismantles these proxies:
+* **No Resumes:** Replaced by a local **Cognitive Twin** compiled from development, design, and work telemetry.
+* **No Subjective Interviews:** Replaced by **Ephemeral Sandbox Trials** where candidates solve live tickets alongside AI team agents.
+* **No Credentials:** Replaced by **Proof-of-Ability Ledgers** tracking ZK-proven sandbox completions.
 
 ---
 
-## 🧠 AI Technologies Used
+## 🛠️ Project Structure
 
-* Natural Language Processing (NLP)
-* Large Language Models (LLMs)
-* Semantic Search
-* Information Extraction
-* Recommendation Systems
-* Intelligent Candidate Scoring
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-
-### Backend
-
-* FastAPI
-* Python
-
-### Database
-
-* PostgreSQL
-* Supabase
-
-### AI Layer
-
-* OpenAI API
-* Gemini API
-* Sarvam AI (Optional)
+```
+talentlens/
+│
+├── app.py                   # Optimized Candidate Ranking Engine (Local CLI)
+├── test_app.py              # Verification suite validating mock candidates
+├── talentlens_x.html        # Interactive Aether Sandbox and Dashboard (Web)
+├── job_description.txt      # Target role spec (Senior AI Engineer)
+├── submission.csv           # Monotonically ranked top-100 output
+└── submission_metadata.yaml # Hackathon submission manifest
+```
 
 ---
 
-## 🚀 How It Works
+## ⚙️ Candidate Ranking Engine (`app.py`) Optimizations
 
-1. Upload candidate resume
-2. AI extracts relevant information
-3. Skills and experience are analyzed
-4. Candidate profile is generated
-5. Job-fit score is calculated
-6. Recruiters receive actionable insights
-7. Candidates receive personalized recommendations
+The local candidate ranking algorithm has been overhauled to resolve compressed score ranges, spelling inconsistencies, and incorrect domain matches.
 
----
+### 1. Robust Skill Normalization Matcher
+Previously, candidates with `"sentence transformers"` or `"llms"` failed to match `"sentence-transformers"` and `"llm"` due to spacing/hyphenation. The engine now uses `normalize_skill` and `is_skill_match` to clean strings (case, spacing, hyphens, and plurals) before verification.
 
-## 💡 Use Cases
+### 2. High-Fidelity Skill Scoring Range
+Instead of dividing earned points by the sum of *all* 25+ target skills (which deflated scores to ~20/100), the engine evaluates candidates against a realistic **skill ceiling** (`SKILL_CEILING_WEIGHT = 13.0` points, representing 4 must-have skills and 2 nice-to-haves), allowing top matches to score 90-100%.
 
-### For Recruiters
+### 3. Strict Non-Domain Filtering (CV / Speech Leak Fix)
+The job description specifies that **Computer Vision, Speech, and Robotics** backgrounds are a "wrong fit." 
+* Added a **45-point career penalty** for non-domain roles in headlines or current titles (e.g. "Computer Vision Specialist").
+* Modified the skill filter to deduct up to **30 points** for non-domain skills, regardless of whether the candidate has other matching keywords.
 
-* Reduce resume screening time
-* Improve hiring quality
-* Discover hidden talent
-* Make data-driven hiring decisions
+### 4. Proportionate Consulting Penalty
+The binary consulting filter has been replaced with a **ratio-based consulting penalty** (up to 40 points) corresponding to the proportion of consulting companies in the candidate's career timeline.
 
-### For Candidates
-
-* Understand strengths and weaknesses
-* Identify skill gaps
-* Improve employability
-* Receive personalized career guidance
-
-### For Organizations
-
-* Optimize recruitment workflows
-* Improve talent acquisition efficiency
-* Build stronger teams
+### 5. Rebalanced Evaluation Weights
+Weights are shifted from availability indicators to core technical capability:
+* **Career Evidence & Trajectory:** `35%` (was 30%)
+* **Skill Relevance:** `25%` (was 20%)
+* **Recruitability Index:** `25%` (was 35%)
+* **Semantic Match (TF-IDF):** `15%`
 
 ---
 
-## 🌍 Vision
+## 🖥️ TalentLens X Interactive App (`talentlens_x.html`)
 
-Our vision is to create an AI-powered Talent Operating System that helps individuals discover opportunities, improve their skills, and navigate their careers while enabling organizations to identify, evaluate, and develop talent more effectively.
+An interactive, self-contained mockup of the 2035 **Aether Protocol** workspace. It lets recruiters and candidates experience the Sandbox Trial flow firsthand.
 
----
-
-## 🔮 Future Roadmap
-
-* AI Interview Copilot
-* Behavioral Assessment Engine
-* Video Interview Analysis
-* Career Growth Recommendations
-* Internal Talent Mobility Insights
-* Multi-Language Resume Support
-* AI Job Description Generator
-* Enterprise Recruitment Analytics
+* **Monaco-style Editor:** A mock IDE containing Python code with type bugs.
+* **Agent Crisis Simulation:** A team chat where AI agents (Sarah, Dave) update specs dynamically mid-task, requesting an auth header pivot to evaluate candidate adaptability.
+* **Sandbox Terminal:** A live logs terminal displaying compile status, lint outputs, and test results.
+* **Cognitive Twin Canvas:** A dynamic node-link graph mapping candidate mastery fields in real-time.
 
 ---
 
-## 📌 Project Status
+## 🏃 Running the Code
 
-🚧 Active Development
+### 1. Execute the Local Ranking Engine
+Ensure `candidates.jsonl` or `candidates.jsonl.gz` is placed in the project directory, then run:
+```bash
+python app.py
+```
+This produces `submission.csv` containing the sorted, ranked top 100 candidates with descriptive recruiter reasoning.
 
-TalentLens is continuously evolving with new AI capabilities, smarter candidate evaluation models, and enhanced recruiter workflows.
+### 2. Run the Verification Tests
+To run unit assertions verifying the scoring logic against mock candidates (Perfect AI, CV Specialist, Consulting Developer):
+```bash
+python test_app.py
+```
 
----
-
-## 👨‍💻 Author
-
-**Ruthvik Goud**
-
-GitHub: https://github.com/ruthvikgoud16
-
-LinkedIn: https://www.linkedin.com/in/bathini-ruthvik-2aa3003b9
-
-
-
-### "Helping organizations hire smarter and helping individuals grow better with AI."
+### 3. Open the Interactive Workspace
+Open your browser and navigate to the local mockup file:
+* Double-click [talentlens_x.html](file:///c:/Users/rudra/OneDrive/Music/talentlens/talentlens_x.html) to run the workspace trial simulation.
