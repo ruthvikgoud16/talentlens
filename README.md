@@ -293,6 +293,7 @@ Open your browser and navigate to either:
 * **GitHub Profile:** [@ruthvikgoud16](https://github.com/ruthvikgoud16)
 * **LinkedIn:** [Ruthvik Goud Profile](https://www.linkedin.com/in/ruthvikgoud)
 * **Email:** [bathiniruthvik370@gmail.com](mailto:bathiniruthvik370@gmail.com)
+* **Phone:** +91-9392796458
 
 ---
 
