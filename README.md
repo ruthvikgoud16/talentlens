@@ -197,13 +197,13 @@ When launching `talentlens_x.html`, you can trigger the **Autoplay Demo Mode** t
 ```text
 talentlens/
 │
-├── assets/
-│   ├── docs/
-│   │   ├── demo_script.md               # Demo narration script
-│   │   ├── recording_guide.md           # Screen recording instructions
-│   │   ├── scene_storyboard.md          # Visual scene descriptions
-│   │   ├── shot_list.md                 # Shot-by-shot timing table
-│   │   └── subtitle_timeline.srt        # Video subtitle file
+├──/--
+│   
+│   │   
+│   │   
+│   │   
+│   │   
+│   │  
 │   ├── screenshots/
 │   │   ├── dashboard_view.png           # Interactive app landing screenshot
 │   │   ├── workflow_stepper.png         # Live stepper animation screenshot
