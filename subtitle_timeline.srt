@@ -1,0 +1,70 @@
+1
+00:00:00,000 --> 00:00:04,000
+TalentLens — Explainable AI Ranking Engine
+
+2
+00:00:04,001 --> 00:00:09,000
+Built for the Redrob Hackathon 2026
+by Ruthvik Goud
+
+3
+00:00:09,001 --> 00:00:14,000
+Ranks 100,000 candidates for a
+Senior AI Engineer role
+
+4
+00:00:14,001 --> 00:00:20,000
+Four-Stage Ranking Pipeline —
+fully local, no API calls
+
+5
+00:00:20,001 --> 00:00:27,000
+35% Career Evidence & Trajectory
+25% Recruitability Index
+
+6
+00:00:27,001 --> 00:00:33,000
+25% Explicit Skill Relevance
+15% Semantic TF-IDF Match
+
+7
+00:00:33,001 --> 00:00:40,000
+Weighted Score Formula:
+final_score = max(0, weighted - honeypot × 0.10)
+
+8
+00:00:40,001 --> 00:00:47,000
+100,000 candidates ingested
+↓
+1,000 semantic matches filtered
+
+9
+00:00:47,001 --> 00:00:52,000
+100 ranked by multi-signal scoring
+↓
+10 finalists selected
+
+10
+00:00:52,001 --> 01:00,500
+🥇 Gold: CAND_0086022 — Score 77.24
+Senior Applied Scientist
+
+11
+01:00,501 --> 01:02,000
+🥈 Silver: CAND_0079387 — Score 76.79
+🥉 Bronze: CAND_0005649 — Score 76.56
+
+12
+01:02,001 --> 01:08,000
+Top 100 ranked candidates
+with full explainable reasoning
+
+13
+01:08,001 --> 01:14,000
+Every score is traceable.
+Every decision is explainable.
+
+14
+01:14,001 --> 01:20,000
+TalentLens · ruthvikgoud16 · GitHub
+Redrob Hackathon 2026
