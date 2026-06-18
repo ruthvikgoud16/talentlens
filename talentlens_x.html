@@ -789,9 +789,416 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.
   color: var(--purple);
   border: 1px solid rgba(168, 85, 247, 0.2);
 }
+
+/* Phase 5.2 Additions - visual podium, stepper, guided tour */
+.podium-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: end;
+}
+@media (max-width: 900px) {
+  .podium-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.podium-card {
+  background: var(--card2);
+  border: 1px solid var(--b);
+  border-radius: var(--rl);
+  padding: 22px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+.podium-card:hover {
+  transform: translateY(-5px);
+}
+.podium-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+}
+.podium-card.gold {
+  border-color: rgba(255, 215, 0, 0.45);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);
+  transform: scale(1.05);
+  background: linear-gradient(135deg, rgba(20, 24, 15, 0.95), var(--card2));
+}
+.podium-card.gold::before {
+  background: linear-gradient(to right, #FFD700, #FFA500);
+}
+.podium-card.gold:hover {
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.3);
+  transform: scale(1.05) translateY(-5px);
+}
+.podium-card.silver {
+  border-color: rgba(192, 192, 192, 0.35);
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.08);
+}
+.podium-card.silver::before {
+  background: linear-gradient(to right, #C0C0C0, #E2E8F0);
+}
+.podium-card.silver:hover {
+  box-shadow: 0 0 30px rgba(192, 192, 192, 0.2);
+}
+.podium-card.bronze {
+  border-color: rgba(205, 127, 50, 0.35);
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.08);
+}
+.podium-card.bronze::before {
+  background: linear-gradient(to right, #CD7F32, #B87333);
+}
+.podium-card.bronze:hover {
+  box-shadow: 0 0 30px rgba(205, 127, 50, 0.2);
+}
+.podium-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.podium-card.gold .podium-badge { background: rgba(255, 215, 0, 0.1); color: #FFD700; border: 1px solid rgba(255, 215, 0, 0.2); }
+.podium-card.silver .podium-badge { background: rgba(192, 192, 192, 0.1); color: #C0C0C0; border: 1px solid rgba(192, 192, 192, 0.2); }
+.podium-card.bronze .podium-badge { background: rgba(205, 127, 50, 0.1); color: #CD7F32; border: 1px solid rgba(205, 127, 50, 0.2); }
+.podium-rank-text {
+  font-size: 0.65rem;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.podium-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
+.podium-title {
+  font-size: 0.72rem;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+.podium-score-val {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--cyan);
+  line-height: 1;
+}
+.podium-score-lbl {
+  font-size: 0.6rem;
+  color: var(--t4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+.podium-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+/* Stepper Modal CSS */
+.stepper-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 2000;
+  background: rgba(4, 6, 8, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.stepper-content {
+  width: 100%;
+  max-width: 500px;
+  background: var(--card);
+  border: 1px solid var(--bc);
+  box-shadow: 0 0 40px rgba(0, 212, 255, 0.15);
+  border-radius: var(--rl);
+  padding: 28px;
+}
+.stepper-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+}
+.stepper-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r);
+  border: 1px solid var(--b);
+  background: rgba(255, 255, 255, 0.01);
+  transition: all 0.3s ease;
+  text-align: left;
+}
+.stepper-stage.active {
+  border-color: var(--bc);
+  background: var(--cdim);
+  box-shadow: 0 0 10px var(--cglow);
+}
+.stepper-stage.done {
+  border-color: rgba(0, 245, 160, 0.2);
+  background: var(--gdim);
+}
+.stg-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.stepper-stage.active .stg-indicator {
+  border-color: var(--cyan);
+  background: rgba(0, 212, 255, 0.1);
+}
+.stepper-stage.active .stg-indicator::after {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--cyan);
+}
+.stepper-stage.done .stg-indicator {
+  border-color: var(--green);
+  background: rgba(0, 245, 160, 0.1);
+}
+.stepper-stage.done .stg-indicator::after {
+  content: '✓';
+  color: var(--green);
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+.stg-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stg-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--t2);
+}
+.stepper-stage.active .stg-name {
+  color: var(--cyan);
+}
+.stepper-stage.done .stg-name {
+  color: var(--green);
+}
+.stg-status {
+  font-size: 0.65rem;
+  color: var(--t4);
+}
+.stepper-stage.active .stg-status {
+  color: var(--cyan);
+}
+.stepper-stage.done .stg-status {
+  color: var(--green);
+}
+.stg-meta {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--t3);
+}
+
+/* Walkthrough tooltip CSS */
+.wt-tooltip-card {
+  position: absolute;
+  z-index: 2500;
+  width: 320px;
+  background: var(--card2);
+  border: 1px solid var(--bc);
+  box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+  border-radius: var(--rl);
+  padding: 18px;
+  display: none;
+  animation: tt-fadein 0.3s ease;
+}
+@keyframes tt-fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wt-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.wt-step-badge {
+  font-size: 0.62rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green);
+  background: var(--gdim);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 245, 160, 0.2);
+}
+.wt-close {
+  background: transparent;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.wt-close:hover {
+  color: var(--t1);
+}
+.wt-tooltip-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+  text-align: left;
+}
+.wt-tooltip-body {
+  font-size: 0.76rem;
+  color: var(--t2);
+  line-height: 1.45;
+  margin-bottom: 14px;
+  text-align: left;
+}
+.wt-tooltip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wt-highlight {
+  box-shadow: 0 0 0 4px var(--cyan), 0 0 20px rgba(0, 212, 255, 0.4) !important;
+  z-index: 2400 !important;
+  position: relative !important;
+}
+
+/* Glassmorphism overrides */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
 </style>
 </head>
 <body>
+
+<!-- Live Workflow Stepper Modal (Task 1) -->
+<div id="pipeline-stepper-modal" class="stepper-modal" style="display: none;">
+  <div class="stepper-content card">
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="sbadge c" style="margin-bottom:8px;">MODULE EXECUTION STATUS</div>
+      <h3 style="font-size:1.15rem; font-weight:800; color:#fff; letter-spacing:0.5px;">TalentLens X AI Pipeline</h3>
+      <p style="font-size:0.76rem; color:var(--t3); margin-top:4px;">Processing 100,000 candidate profiles through 9 computational nodes...</p>
+    </div>
+    
+    <div class="stepper-stages">
+      <div class="stepper-stage" id="stg-1">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Parsing Job Description</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">50ms</div>
+      </div>
+      <div class="stepper-stage" id="stg-2">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Generating Embeddings</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">1.2s</div>
+      </div>
+      <div class="stepper-stage" id="stg-3">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Searching 100,000 Candidates</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">142ms</div>
+      </div>
+      <div class="stepper-stage" id="stg-4">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Building Top 1000 Pool</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">80ms</div>
+      </div>
+      <div class="stepper-stage" id="stg-5">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Applying Truth Engine</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">4.5s</div>
+      </div>
+      <div class="stepper-stage" id="stg-6">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Applying FutureFit Engine</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">2.1s</div>
+      </div>
+      <div class="stepper-stage" id="stg-7">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Generating Explainability</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">1.5s</div>
+      </div>
+      <div class="stepper-stage" id="stg-8">
+        <div class="stg-indicator"></div>
+        <div class="stg-info">
+          <div class="stg-name">Final Rankings Ready</div>
+          <div class="stg-status">Awaiting...</div>
+        </div>
+        <div class="stg-meta">30ms</div>
+      </div>
+    </div>
+    
+    <div style="margin-top:20px; border-top: 1px solid var(--b); padding-top:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--t3); margin-bottom:6px;">
+        <span style="font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Orchestrator Pipeline Progress</span>
+        <span id="stg-progress-val" style="font-family:var(--mono); font-weight:700; color:var(--cyan)">0%</span>
+      </div>
+      <div class="pw"><div id="stg-progress-bar" class="pf pfc" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Walkthrough Tooltip Overlay (Task 3) -->
+<div id="wt-tooltip" class="wt-tooltip-card">
+  <div class="wt-tooltip-header">
+    <span class="wt-step-badge" id="wt-step-num">Step 1 of 7</span>
+    <button class="wt-close" onclick="closeWalkthrough()">✕</button>
+  </div>
+  <div class="wt-tooltip-title" id="wt-title">Guided Step Title</div>
+  <div class="wt-tooltip-body" id="wt-body">This is the step description.</div>
+  <div class="wt-tooltip-footer">
+    <button class="btn bg" id="wt-btn-prev" onclick="prevWalkthroughStep()" style="font-size:0.68rem; padding:4px 8px;">Back</button>
+    <button class="btn bp" id="wt-btn-next" onclick="nextWalkthroughStep()" style="font-size:0.68rem; padding:4px 8px;">Next Step</button>
+  </div>
+</div>
 
 <nav id="nav">
   <div class="nav-brand" onclick="sv('home')">
@@ -809,6 +1216,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.
     <button class="nl" id="nav-explainability" onclick="sv('explainability')">💡 Explain</button>
     <button class="nl" id="nav-analytics" onclick="sv('analytics')">📊 Analytics</button>
     <button class="nl" id="nav-demo" onclick="sv('demo')" style="border: 1px solid rgba(0,212,255,0.3); background: rgba(0,212,255,0.06); color: var(--cyan); margin-left: 8px;">⚡ Demo Mode</button>
+    <button class="nl" id="nav-walkthrough" onclick="startWalkthrough()" style="border: 1px solid rgba(0,245,160,0.35); background: rgba(0,245,160,0.08); color: var(--green); margin-left: 8px; font-weight: 700;">✨ Guided Tour</button>
   </div>
   <div class="status-pill"><div class="sdot"></div>100K Candidates Indexed</div>
 </nav>
@@ -832,7 +1240,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.
     <h1>The Future of Hiring is<br><span class="hero-grad">Human Potential Intelligence</span></h1>
     <p class="hero-desc">TalentLens X doesn't match resumes — it discovers human potential. Our 9-module AI pipeline semantically retrieves, truth-validates, and future-predicts every candidate, delivering fully explainable ranked results in under 3 minutes for 100,000 candidates.</p>
     <div class="hero-cta">
-      <button class="btn bp" onclick="sv('jd-parser');setTimeout(runJDParsing,400)">▶ Run Full AI Pipeline Demo</button>
+      <button class="btn bp" onclick="runFullAIPipeline()">▶ Run Full AI Pipeline Demo</button>
       <button class="btn bg" onclick="sv('rankings')">📊 Rankings Dashboard</button>
       <button class="btn bg" onclick="sv('analytics')">📈 Analytics</button>
     </div>
@@ -872,7 +1280,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.
           <textarea class="jdta" id="jd-ta"></textarea>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn bp" id="btn-parse" onclick="runJDParsing()" style="flex:1">🧠 Parse with AI</button>
+          <button class="btn bp" id="btn-parse" onclick="runFullAIPipeline()" style="flex:1">🧠 Analyze &amp; Rank</button>
           <button class="btn bg" onclick="sv('discovery')">Discovery →</button>
         </div>
       </div>
@@ -993,6 +1401,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.
           <div style="display:flex;gap:8px">
             <button class="btn bg" style="font-size:0.73rem;padding:5px 11px" onclick="sv('explainability')">💡 Explainability</button>
             <button class="btn bg" style="font-size:0.73rem;padding:5px 11px" onclick="sv('analytics')">📈 Analytics</button>
+            <button class="btn bp" id="btn-export-csv" style="font-size:0.73rem;padding:5px 11px;font-weight:700;" onclick="exportDemoCSV()">📥 Export Top 100 CSV</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:34px 42px 1fr auto;gap:14px;padding:7px 18px;font-size:0.62rem;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.5px">
@@ -2131,20 +2540,68 @@ function startDiscovery(){
 /* ============================================================
    RANKINGS
    ============================================================ */
+function getPodiumCardHTML(c, tier) {
+  const badgeText = tier === 'gold' ? '🥇 Gold' : tier === 'silver' ? '🥈 Silver' : '🥉 Bronze';
+  const topSkills = c.sk.slice(0, 3).map(s => `<span class="tag tc" style="font-size:0.6rem; padding:2px 5px;">${s.n}</span>`).join(' ');
+  return `
+    <div class="podium-card ${tier}" onclick="showProfile('${c.id}');sv('profile');">
+      <div class="podium-badge">${badgeText}</div>
+      <div class="podium-rank-text">Rank #${c.rank}</div>
+      <div class="podium-name">${c.name}</div>
+      <div class="podium-title">${c.title} · ${c.co}</div>
+      <div class="podium-score-val">${c.fs.toFixed(1)}</div>
+      <div class="podium-score-lbl">FINAL SCORE</div>
+      <div class="podium-skills">${topSkills}</div>
+    </div>
+  `;
+}
+
 function renderRankings(list){
   const rl=document.getElementById('rlist');
   const sn=document.getElementById('sh-n');
   if(!rl)return;
   rl.innerHTML=''; sn.textContent=list.length;
-  list.forEach(c=>{
-    const r=document.createElement('div');
-    const bc=c.rank===1?'r1':c.rank===2?'r2':c.rank===3?'r3':'rn';
-    r.className='rrow '+bc+(c.rank<=3?' rtop':'');
-    r.onclick=()=>{showProfile(c.id);sv('profile');};
-    const sc=c.fs>=88?'var(--cyan)':c.fs>=80?'var(--green)':'var(--t2)';
-    r.innerHTML=`<div class="rb ${bc}" style="width:32px;height:32px">#${c.rank}</div><div class="av" style="width:40px;height:40px;background:${c.ac}22;color:${c.ac};border:1px solid ${c.ac}33;font-size:0.78rem">${c.ini}</div><div class="ri"><div class="rn">${c.name}</div><div class="rtit">${c.title} · <span style="color:var(--cyan)">${c.co}</span></div><div class="rloc">📍 ${c.loc} · ${c.yr}yr · ${c.nd}d notice</div></div><div class="rsc"><div class="sc"><div class="scl">Semantic</div><div class="scv cyan">${c.sm.toFixed(1)}</div><div class="scb"><div style="height:100%;width:${c.sm}%;background:var(--cyan);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Truth</div><div class="scv green">${c.ts}</div><div class="scb"><div style="height:100%;width:${c.ts}%;background:var(--green);border-radius:1px"></div></div></div><div class="sc"><div class="scl">FutureFit</div><div class="scv purple">${c.ff}</div><div class="scb"><div style="height:100%;width:${c.ff}%;background:var(--purple);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Exp.</div><div class="scv orange">${c.ea}</div><div class="scb"><div style="height:100%;width:${c.ea}%;background:var(--orange);border-radius:1px"></div></div></div><div class="stb"><div class="stn" style="color:${sc}">${c.fs.toFixed(1)}</div><div class="stl">/ 100</div></div></div>`;
-    rl.appendChild(r);
-  });
+  
+  if (list.length >= 3 && (list[0].rank === 1 || list.length === CANDS.length || list[0].rank <= 3)) {
+    // Top 3 Podium
+    const pGrid = document.createElement('div');
+    pGrid.className = 'podium-grid';
+    
+    // Order: Silver (2nd in list), Gold (1st in list), Bronze (3rd in list)
+    const goldCand = list.find(c => c.rank === 1) || list[0];
+    const silverCand = list.find(c => c.rank === 2) || list[1];
+    const bronzeCand = list.find(c => c.rank === 3) || list[2];
+    
+    pGrid.innerHTML = `
+      ${getPodiumCardHTML(silverCand, 'silver')}
+      ${getPodiumCardHTML(goldCand, 'gold')}
+      ${getPodiumCardHTML(bronzeCand, 'bronze')}
+    `;
+    rl.appendChild(pGrid);
+    
+    // Render the rest as standard rows
+    list.forEach(c => {
+      if (c.id === goldCand.id || c.id === silverCand.id || c.id === bronzeCand.id) return;
+      const r = document.createElement('div');
+      const bc = c.rank===1?'r1':c.rank===2?'r2':c.rank===3?'r3':'rn';
+      r.className = 'rrow ' + bc;
+      r.onclick = () => { showProfile(c.id); sv('profile'); };
+      const sc = c.fs>=88?'var(--cyan)':c.fs>=80?'var(--green)':'var(--t2)';
+      r.innerHTML = `<div class="rb ${bc}" style="width:32px;height:32px">#${c.rank}</div><div class="av" style="width:40px;height:40px;background:${c.ac}22;color:${c.ac};border:1px solid ${c.ac}33;font-size:0.78rem">${c.ini}</div><div class="ri"><div class="rn">${c.name}</div><div class="rtit">${c.title} · <span style="color:var(--cyan)">${c.co}</span></div><div class="rloc">📍 ${c.loc} · ${c.yr}yr · ${c.nd}d notice</div></div><div class="rsc"><div class="sc"><div class="scl">Semantic</div><div class="scv cyan">${c.sm.toFixed(1)}</div><div class="scb"><div style="height:100%;width:${c.sm}%;background:var(--cyan);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Truth</div><div class="scv green">${c.ts}</div><div class="scb"><div style="height:100%;width:${c.ts}%;background:var(--green);border-radius:1px"></div></div></div><div class="sc"><div class="scl">FutureFit</div><div class="scv purple">${c.ff}</div><div class="scb"><div style="height:100%;width:${c.ff}%;background:var(--purple);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Exp.</div><div class="scv orange">${c.ea}</div><div class="scb"><div style="height:100%;width:${c.ea}%;background:var(--orange);border-radius:1px"></div></div></div><div class="stb"><div class="stn" style="color:${sc}">${c.fs.toFixed(1)}</div><div class="stl">/ 100</div></div></div>`;
+      rl.appendChild(r);
+    });
+  } else {
+    // List has fewer than 3 elements or non-sequential, render all as rows
+    list.forEach(c => {
+      const r = document.createElement('div');
+      const bc = c.rank===1?'r1':c.rank===2?'r2':c.rank===3?'r3':'rn';
+      r.className = 'rrow ' + bc;
+      r.onclick = () => { showProfile(c.id); sv('profile'); };
+      const sc = c.fs>=88?'var(--cyan)':c.fs>=80?'var(--green)':'var(--t2)';
+      r.innerHTML = `<div class="rb ${bc}" style="width:32px;height:32px">#${c.rank}</div><div class="av" style="width:40px;height:40px;background:${c.ac}22;color:${c.ac};border:1px solid ${c.ac}33;font-size:0.78rem">${c.ini}</div><div class="ri"><div class="rn">${c.name}</div><div class="rtit">${c.title} · <span style="color:var(--cyan)">${c.co}</span></div><div class="rloc">📍 ${c.loc} · ${c.yr}yr · ${c.nd}d notice</div></div><div class="rsc"><div class="sc"><div class="scl">Semantic</div><div class="scv cyan">${c.sm.toFixed(1)}</div><div class="scb"><div style="height:100%;width:${c.sm}%;background:var(--cyan);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Truth</div><div class="scv green">${c.ts}</div><div class="scb"><div style="height:100%;width:${c.ts}%;background:var(--green);border-radius:1px"></div></div></div><div class="sc"><div class="scl">FutureFit</div><div class="scv purple">${c.ff}</div><div class="scb"><div style="height:100%;width:${c.ff}%;background:var(--purple);border-radius:1px"></div></div></div><div class="sc"><div class="scl">Exp.</div><div class="scv orange">${c.ea}</div><div class="scb"><div style="height:100%;width:${c.ea}%;background:var(--orange);border-radius:1px"></div></div></div><div class="stb"><div class="stn" style="color:${sc}">${c.fs.toFixed(1)}</div><div class="stl">/ 100</div></div></div>`;
+      rl.appendChild(r);
+    });
+  }
 }
 
 function fr(type,el){
@@ -2645,82 +3102,234 @@ function renderAnalytics(){
   <div class="ach"><div class="act">🌪 Candidate Pipeline Funnel</div><span class="sbadge c">100K to Top 10</span></div>
   <div class="ca" id="funnel-container"></div>
 </div>
-<div class="ac"><div class="ach"><div class="act">📊 Final Score Distribution</div><span class="sbadge c">Top 20 Pool</span></div><div class="ca"><div class="dbs" id="dbs"></div><div class="dls" id="dls"></div><div style="font-size:0.68rem;color:var(--t4);margin-top:7px;text-align:center">Score Range (0–100)</div></div></div>
-<div class="ac"><div class="ach"><div class="act">⚡ Most Common Matched Skills</div><span class="sbadge g">Skill Coverage</span></div><div class="ca"><div class="brc" id="skch"></div></div></div>
-<div class="ac"><div class="ach"><div class="act">🎯 Avg Component Scores</div><span class="sbadge p">Pool Analytics</span></div><div class="ca"><div class="brc" id="compch"></div></div></div>
-<div class="ac"><div class="ach"><div class="act">⏱ Notice Period Distribution</div><span class="sbadge o">Hiring Velocity</span></div><div class="ca" id="notch"></div></div>
+<div class="ac">
+  <div class="ach"><div class="act">📊 Final Score Distribution</div><span class="sbadge c">Ranking Spread</span></div>
+  <div class="ca" id="ranking-dist-chart" style="height:170px; display:flex; align-items:center; justify-content:center;"></div>
+</div>
+<div class="ac">
+  <div class="ach"><div class="act">✅ Truth Score Distribution</div><span class="sbadge g">Verification Spread</span></div>
+  <div class="ca" id="truth-dist-chart" style="height:170px; display:flex; align-items:center; justify-content:center;"></div>
+</div>
+<div class="ac">
+  <div class="ach"><div class="act">🚀 FutureFit Score Distribution</div><span class="sbadge p">Growth Potential Spread</span></div>
+  <div class="ca" id="futurefit-dist-chart" style="height:170px; display:flex; align-items:center; justify-content:center;"></div>
+</div>
+<div class="ac">
+  <div class="ach"><div class="act">⏱ Notice Period & Notice Buyout</div><span class="sbadge o">Hiring Velocity</span></div>
+  <div class="ca" id="notch"></div>
+</div>
 <div class="ac" style="grid-column:1/-1"><div class="ach"><div class="act">💡 Hiring Intelligence Insights</div><span class="sbadge g">AI Generated</span></div><div class="ca"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
   <div style="padding:14px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.1);border-radius:var(--r)"><div style="font-size:0.76rem;font-weight:700;color:var(--cyan);margin-bottom:7px">🏆 Top Performer Pattern</div><div style="font-size:0.78rem;color:var(--t3);line-height:1.6">Top 5 candidates share: 6–7 years at product companies, ≥1 production vector DB deployment at &gt;10M user scale, and active GitHub or open-source presence. FAISS and Qdrant are the most common vector DB technologies in the pool.</div></div>
   <div style="padding:14px;background:rgba(0,245,160,0.04);border:1px solid rgba(0,245,160,0.1);border-radius:var(--r)"><div style="font-size:0.76rem;font-weight:700;color:var(--green);margin-bottom:7px">⚡ Quick Hire Opportunity</div><div style="font-size:0.78rem;color:var(--t3);line-height:1.6">CAND_0061655 (Nikhil Joshi, 10 days) and CAND_0018499 (Arjun, 15 days) offer the fastest hiring velocity in the top performers. Combined with high final scores (&gt;83), these represent the best time-to-hire options in the entire 100K pool.</div></div>
   <div style="padding:14px;background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.1);border-radius:var(--r)"><div style="font-size:0.76rem;font-weight:700;color:var(--purple);margin-bottom:7px">🚀 FutureFit Leaders</div><div style="font-size:0.78rem;color:var(--t3);line-height:1.6">Arjun Krishnamurthy (91) and Priya Venkataraman (90) lead on FutureFit. Both show continuous learning signals: recent open-source contributions, published writing, and rapid skill acquisition. Ideal for founding-team culture requiring adaptability.</div></div>
   <div style="padding:14px;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.1);border-radius:var(--r)"><div style="font-size:0.76rem;font-weight:700;color:var(--orange);margin-bottom:7px">⚠️ Availability Concerns</div><div style="font-size:0.78rem;color:var(--t3);line-height:1.6">3 of top 20 have 45–60 day notice periods (Karthik, Lavanya, Rahul Menon). Ananya Gupta (rank #8) is not currently open to work — requires outbound approach. Plan for pipeline delay or negotiation for these candidates.</div></div>
 </div></div></div>`;
-  setTimeout(()=>{renderFunnel();renderDist();renderSkills();renderComps();renderNotice();},80);
+  setTimeout(()=>{renderFunnel();drawRankingDistribution();drawTruthScoreDistribution();drawFutureFitDistribution();renderNotice();},80);
 }
+
 function renderFunnel() {
   const el = document.getElementById('funnel-container');
   if(!el) return;
   el.innerHTML = `
     <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:850px; margin:0 auto; padding:10px 0;">
       <div class="funnel-stage funnel-stage-1">
-        <div class="funnel-bar">
-          <div class="funnel-title"><span>📂</span> Stage 1: Raw Candidate Pool Ingestion</div>
-          <div class="funnel-count">100,000</div>
-          <div class="funnel-time">⏱ ~50ms</div>
+        <div class="funnel-bar glass-panel">
+          <div class="funnel-title"><span>📂</span> Ingested Candidate Pool</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="funnel-count">100,000 <span style="font-size: 0.7rem; color: var(--t3); font-weight: normal;">(100%)</span></div>
+            <div class="funnel-time">⏱ 50ms</div>
+          </div>
         </div>
       </div>
       <div class="funnel-arrow-down">↓</div>
       
       <div class="funnel-stage funnel-stage-2">
-        <div class="funnel-bar">
-          <div class="funnel-title"><span>⚡</span> Stage 2: TF-IDF Semantic Screen (Top 1%)</div>
-          <div class="funnel-count">1,000</div>
-          <div class="funnel-time">⏱ ~1.2s</div>
+        <div class="funnel-bar glass-panel">
+          <div class="funnel-title"><span>🔍</span> Semantic Matches</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="funnel-count">1,000 <span style="font-size: 0.7rem; color: var(--t3); font-weight: normal;">(1.0%)</span></div>
+            <div class="funnel-time">⏱ 142ms</div>
+          </div>
         </div>
       </div>
       <div class="funnel-arrow-down">↓</div>
 
       <div class="funnel-stage funnel-stage-3">
-        <div class="funnel-bar">
-          <div class="funnel-title"><span>🎯</span> Stage 3: Multi-Signal Score &amp; Group Verification</div>
-          <div class="funnel-count">100</div>
-          <div class="funnel-time">⏱ ~4.5s</div>
+        <div class="funnel-bar glass-panel">
+          <div class="funnel-title"><span>✅</span> Ranked Candidates</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="funnel-count">100 <span style="font-size: 0.7rem; color: var(--t3); font-weight: normal;">(0.1%)</span></div>
+            <div class="funnel-time">⏱ 6.6s</div>
+          </div>
         </div>
       </div>
       <div class="funnel-arrow-down">↓</div>
 
       <div class="funnel-stage funnel-stage-4">
-        <div class="funnel-bar">
-          <div class="funnel-title"><span>🏆</span> Stage 4: DeepSeek-R1 Cognitive Audit Trail</div>
-          <div class="funnel-count">10</div>
-          <div class="funnel-time">⏱ ~35s</div>
+        <div class="funnel-bar glass-panel">
+          <div class="funnel-title"><span>🏆</span> Finalists</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="funnel-count">10 <span style="font-size: 0.7rem; color: var(--t3); font-weight: normal;">(0.01%)</span></div>
+            <div class="funnel-time">⏱ 35s</div>
+          </div>
         </div>
       </div>
     </div>
   `;
 }
-function renderDist(){
-  const bs=document.getElementById('dbs'),ls=document.getElementById('dls');
-  if(!bs)return;
-  const bkts=['75-77','78-80','81-83','84-87','88-91'];
-  const counts=[3,5,6,4,2],max=6;
-  const cols=['var(--t4)','var(--t3)','var(--cyan)','var(--green)','var(--purple)'];
-  bs.innerHTML=counts.map((c,i)=>`<div class="db" style="background:${cols[i]};height:${Math.round(c/max*100)}%;opacity:0.8" title="${bkts[i]}: ${c}"></div>`).join('');
-  ls.innerHTML=bkts.map(b=>`<div class="dl">${b}</div>`).join('');
+
+function drawRankingDistribution() {
+  const container = document.getElementById('ranking-dist-chart');
+  if (!container) return;
+  const buckets = { '75-79': 0, '80-84': 0, '85-89': 0, '90-94': 0 };
+  CANDS.forEach(c => {
+    const score = c.fs;
+    if (score >= 75 && score < 80) buckets['75-79']++;
+    else if (score >= 80 && score < 85) buckets['80-84']++;
+    else if (score >= 85 && score < 90) buckets['85-89']++;
+    else if (score >= 90 && score < 95) buckets['90-94']++;
+  });
+  
+  const data = Object.entries(buckets);
+  const maxVal = Math.max(...data.map(d => d[1]));
+  
+  let bars = '';
+  const width = 360;
+  const height = 150;
+  const barWidth = 50;
+  const gap = 30;
+  const paddingLeft = 30;
+  
+  data.forEach(([label, value], idx) => {
+    const x = paddingLeft + idx * (barWidth + gap);
+    const barHeight = (value / maxVal) * (height - 40);
+    const y = height - 20 - barHeight;
+    bars += `
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="url(#cyan-grad)" opacity="0.85">
+        <animate attributeName="height" from="0" to="${barHeight}" dur="1s" fill="freeze" />
+        <animate attributeName="y" from="${height - 20}" to="${y}" dur="1s" fill="freeze" />
+      </rect>
+      <text x="${x + barWidth/2}" y="${y - 6}" font-family="monospace" font-size="10" fill="var(--cyan)" text-anchor="middle">${value}</text>
+      <text x="${x + barWidth/2}" y="${height - 4}" font-family="sans-serif" font-size="10" fill="var(--t3)" text-anchor="middle">${label}</text>
+    `;
+  });
+  
+  container.innerHTML = `
+    <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" style="overflow:visible">
+      <defs>
+        <linearGradient id="cyan-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--cyan)" />
+          <stop offset="100%" stop-color="rgba(0, 212, 255, 0.1)" />
+        </linearGradient>
+      </defs>
+      <line x1="${paddingLeft - 10}" y1="${height - 20}" x2="${width - 10}" y2="${height - 20}" stroke="var(--b)" stroke-width="1" />
+      ${bars}
+    </svg>
+  `;
 }
-function renderSkills(){
-  const ch=document.getElementById('skch'); if(!ch)return;
-  const cnt={};
-  CANDS.forEach(c=>c.sk.filter(s=>s.m).forEach(s=>{cnt[s.n]=(cnt[s.n]||0)+1;}));
-  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  ch.innerHTML=sorted.map(([n,c])=>`<div class="brw"><div class="brl">${n}</div><div class="brt"><div class="brf" style="width:${(c/20)*100}%"></div></div><div class="brv">${c}</div></div>`).join('');
+
+function drawTruthScoreDistribution() {
+  const container = document.getElementById('truth-dist-chart');
+  if (!container) return;
+  const buckets = { '65-70': 0, '71-75': 0, '76-80': 0, '81-85': 0, '86-90': 0 };
+  CANDS.forEach(c => {
+    const score = c.ts;
+    if (score >= 65 && score <= 70) buckets['65-70']++;
+    else if (score >= 71 && score <= 75) buckets['71-75']++;
+    else if (score >= 76 && score <= 80) buckets['76-80']++;
+    else if (score >= 81 && score <= 85) buckets['81-85']++;
+    else if (score >= 86 && score <= 90) buckets['86-90']++;
+  });
+  
+  const data = Object.entries(buckets);
+  const maxVal = Math.max(...data.map(d => d[1]));
+  
+  let bars = '';
+  const width = 360;
+  const height = 150;
+  const barWidth = 40;
+  const gap = 20;
+  const paddingLeft = 30;
+  
+  data.forEach(([label, value], idx) => {
+    const x = paddingLeft + idx * (barWidth + gap);
+    const barHeight = (value / maxVal) * (height - 40);
+    const y = height - 20 - barHeight;
+    bars += `
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="url(#green-grad)" opacity="0.85">
+        <animate attributeName="height" from="0" to="${barHeight}" dur="1s" fill="freeze" />
+        <animate attributeName="y" from="${height - 20}" to="${y}" dur="1s" fill="freeze" />
+      </rect>
+      <text x="${x + barWidth/2}" y="${y - 6}" font-family="monospace" font-size="10" fill="var(--green)" text-anchor="middle">${value}</text>
+      <text x="${x + barWidth/2}" y="${height - 4}" font-family="sans-serif" font-size="10" fill="var(--t3)" text-anchor="middle">${label}</text>
+    `;
+  });
+  
+  container.innerHTML = `
+    <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" style="overflow:visible">
+      <defs>
+        <linearGradient id="green-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--green)" />
+          <stop offset="100%" stop-color="rgba(0, 245, 160, 0.1)" />
+        </linearGradient>
+      </defs>
+      <line x1="${paddingLeft - 10}" y1="${height - 20}" x2="${width - 10}" y2="${height - 20}" stroke="var(--b)" stroke-width="1" />
+      ${bars}
+    </svg>
+  `;
 }
-function renderComps(){
-  const ch=document.getElementById('compch'); if(!ch)return;
-  const avg=k=>((CANDS.reduce((s,c)=>s+c[k],0)/CANDS.length).toFixed(1));
-  const comps=[{n:'Semantic Match',v:avg('sm'),col:'var(--cyan)'},{n:'Truth Score',v:avg('ts'),col:'var(--green)'},{n:'FutureFit Score',v:avg('ff'),col:'var(--purple)'},{n:'Experience Align.',v:avg('ea'),col:'var(--orange)'},{n:'Final Score (avg)',v:avg('fs'),col:'#fff'}];
-  ch.innerHTML=comps.map(c=>`<div class="brw"><div class="brl" style="color:${c.col}">${c.n}</div><div class="brt"><div class="brf" style="width:${c.v}%;background:${c.col};opacity:0.8"></div></div><div class="brv" style="color:${c.col}">${c.v}</div></div>`).join('');
+
+function drawFutureFitDistribution() {
+  const container = document.getElementById('futurefit-dist-chart');
+  if (!container) return;
+  const buckets = { '70-75': 0, '76-80': 0, '81-85': 0, '86-90': 0, '91-95': 0 };
+  CANDS.forEach(c => {
+    const score = c.ff;
+    if (score >= 70 && score <= 75) buckets['70-75']++;
+    else if (score >= 76 && score <= 80) buckets['76-80']++;
+    else if (score >= 81 && score <= 85) buckets['81-85']++;
+    else if (score >= 86 && score <= 90) buckets['86-90']++;
+    else if (score >= 91 && score <= 95) buckets['91-95']++;
+  });
+  
+  const data = Object.entries(buckets);
+  const maxVal = Math.max(...data.map(d => d[1]));
+  
+  let bars = '';
+  const width = 360;
+  const height = 150;
+  const barWidth = 40;
+  const gap = 20;
+  const paddingLeft = 30;
+  
+  data.forEach(([label, value], idx) => {
+    const x = paddingLeft + idx * (barWidth + gap);
+    const barHeight = (value / maxVal) * (height - 40);
+    const y = height - 20 - barHeight;
+    bars += `
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="url(#purple-grad)" opacity="0.85">
+        <animate attributeName="height" from="0" to="${barHeight}" dur="1s" fill="freeze" />
+        <animate attributeName="y" from="${height - 20}" to="${y}" dur="1s" fill="freeze" />
+      </rect>
+      <text x="${x + barWidth/2}" y="${y - 6}" font-family="monospace" font-size="10" fill="var(--purple)" text-anchor="middle">${value}</text>
+      <text x="${x + barWidth/2}" y="${height - 4}" font-family="sans-serif" font-size="10" fill="var(--t3)" text-anchor="middle">${label}</text>
+    `;
+  });
+  
+  container.innerHTML = `
+    <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" style="overflow:visible">
+      <defs>
+        <linearGradient id="purple-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--purple)" />
+          <stop offset="100%" stop-color="rgba(168, 85, 247, 0.1)" />
+        </linearGradient>
+      </defs>
+      <line x1="${paddingLeft - 10}" y1="${height - 20}" x2="${width - 10}" y2="${height - 20}" stroke="var(--b)" stroke-width="1" />
+      ${bars}
+    </svg>
+  `;
 }
+
 function renderNotice(){
   const ch=document.getElementById('notch'); if(!ch)return;
   const C=CANDS;
@@ -2731,8 +3340,6 @@ function renderNotice(){
     {l:'>60 days (High friction)',n:C.filter(c=>c.nd>60).length,col:'var(--red)'}
   ];
   ch.innerHTML=`<div class="brc">${rows.map(r=>`<div class="brw"><div class="brl">${r.l}</div><div class="brt"><div class="brf" style="width:${(r.n/20)*100}%;background:${r.col}"></div></div><div class="brv" style="color:${r.col}">${r.n}</div></div>`).join('')}</div><div style="font-size:0.73rem;color:var(--t3);margin-top:11px;padding:9px;background:rgba(0,245,160,0.04);border-radius:var(--r);border:1px solid rgba(0,245,160,0.1)">💡 <strong style="color:var(--green)">${(((CANDS.filter(c=>c.nd<=30).length)/20)*100).toFixed(0)}%</strong> of shortlisted candidates are within the 30-day buyout window. Prioritize outreach to 10-15 day notice candidates first for fastest hiring velocity.</div>`;
-}
-
 }
 
 /* ============================================================
@@ -3227,6 +3834,296 @@ function exportDemoCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+/* ============================================================
+   LIVE PIPELINE ORCHESTRATOR STEPPER & SKELETON LOADERS
+   ============================================================ */
+function showSkeletonLoaders() {
+  const rlist = document.getElementById('rlist');
+  if (!rlist) return;
+  rlist.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const row = document.createElement('div');
+    row.className = 'skeleton-row';
+    row.innerHTML = `
+      <div class="sk-box" style="width: 32px; height: 32px; border-radius: 8px;"></div>
+      <div class="sk-box" style="width: 40px; height: 40px; border-radius: 10px;"></div>
+      <div>
+        <div class="sk-box" style="width: 140px; height: 14px; margin-bottom: 6px;"></div>
+        <div class="sk-box" style="width: 200px; height: 10px; margin-bottom: 4px;"></div>
+        <div class="sk-box" style="width: 100px; height: 8px;"></div>
+      </div>
+      <div style="display: flex; gap: 18px;">
+        <div class="sk-box" style="width: 50px; height: 30px; border-radius: 4px;"></div>
+        <div class="sk-box" style="width: 50px; height: 30px; border-radius: 4px;"></div>
+        <div class="sk-box" style="width: 50px; height: 30px; border-radius: 4px;"></div>
+        <div class="sk-box" style="width: 50px; height: 30px; border-radius: 4px;"></div>
+        <div class="sk-box" style="width: 58px; height: 35px; border-radius: 4px;"></div>
+      </div>
+    `;
+    rlist.appendChild(row);
+  }
+}
+
+function runFullAIPipeline(callback) {
+  const modal = document.getElementById('pipeline-stepper-modal');
+  if (modal) modal.style.display = 'flex';
+  
+  showSkeletonLoaders();
+  
+  const psStages = ['tok', 'ner', 'cls', 'emb', 'jso'];
+  psStages.forEach(id => {
+    const el = document.getElementById('ps-' + id);
+    const s = document.getElementById('ps-' + id + '-s');
+    if (el && s) {
+      el.className = 'pstage done';
+      s.textContent = '✓ Complete';
+    }
+  });
+  const badge = document.getElementById('pst-badge');
+  if (badge) {
+    badge.textContent = 'COMPLETE';
+    badge.className = 'sbadge g';
+    badge.style.display = 'inline-flex';
+  }
+  const jopanel = document.getElementById('jo-panel');
+  if (jopanel) jopanel.style.display = 'block';
+  renderParsedJSON();
+  showExtractedFields();
+  const jdcta = document.getElementById('jd-cta');
+  if (jdcta) jdcta.style.display = 'block';
+
+  const stages = [
+    { id: 1, delay: 400 },
+    { id: 2, delay: 500 },
+    { id: 3, delay: 400 },
+    { id: 4, delay: 300 },
+    { id: 5, delay: 600 },
+    { id: 6, delay: 500 },
+    { id: 7, delay: 400 },
+    { id: 8, delay: 300 }
+  ];
+
+  stages.forEach(stg => {
+    const el = document.getElementById(`stg-${stg.id}`);
+    if (el) {
+      el.className = "stepper-stage";
+      el.querySelector('.stg-status').textContent = "Awaiting...";
+    }
+  });
+  
+  document.getElementById('stg-progress-bar').style.width = '0%';
+  document.getElementById('stg-progress-val').textContent = '0%';
+  
+  let currentStageIndex = 0;
+  
+  function runStage() {
+    if (currentStageIndex >= stages.length) {
+      setTimeout(() => {
+        if (modal) modal.style.display = 'none';
+        sv('rankings');
+        if (callback && typeof callback === 'function') {
+          callback();
+        }
+      }, 500);
+      return;
+    }
+    
+    const stage = stages[currentStageIndex];
+    const el = document.getElementById(`stg-${stage.id}`);
+    if (el) {
+      el.className = "stepper-stage active";
+      el.querySelector('.stg-status').textContent = "Processing...";
+    }
+    
+    const progressEnd = Math.round(((currentStageIndex + 0.5) / stages.length) * 100);
+    document.getElementById('stg-progress-bar').style.width = `${progressEnd}%`;
+    document.getElementById('stg-progress-val').textContent = `${progressEnd}%`;
+
+    setTimeout(() => {
+      if (el) {
+        el.className = "stepper-stage done";
+        el.querySelector('.stg-status').textContent = "✓ Complete";
+      }
+      
+      const progressDone = Math.round(((currentStageIndex + 1) / stages.length) * 100);
+      document.getElementById('stg-progress-bar').style.width = `${progressDone}%`;
+      document.getElementById('stg-progress-val').textContent = `${progressDone}%`;
+      
+      currentStageIndex++;
+      runStage();
+    }, stage.delay);
+  }
+  
+  runStage();
+}
+
+/* ============================================================
+   RECRUITER DEMO WALKTHROUGH CONTROLLER
+   ============================================================ */
+let wtCurrentStep = 1;
+const wtSteps = [
+  {
+    step: 1,
+    title: "Step 1: Paste Job Description",
+    body: "Confirm or paste the Job Description text here. This defines the required and preferred skills, experience limits, and disqualifiers.",
+    target: "jd-ta",
+    view: "jd-parser",
+    align: "bottom"
+  },
+  {
+    step: 2,
+    title: "Step 2: Trigger AI Analysis",
+    body: "Click 'Analyze & Rank' to start the pipeline. This executes semantic indexing, de-biasing, truth check, and FutureFit analysis.",
+    target: "btn-parse",
+    view: "jd-parser",
+    align: "top"
+  },
+  {
+    step: 3,
+    title: "Step 3: Watch Pipeline Execution",
+    body: "The 8-stage stepper animates live as candidates are filtered down from 100,000 to the top 10 finalists.",
+    target: "pipeline-stepper-modal",
+    view: "jd-parser",
+    align: "center"
+  },
+  {
+    step: 4,
+    title: "Step 4: Inspect Rank #1 Candidate",
+    body: "The top candidates are presented on the podium. Click on the Rank #1 card (Arjun Krishnamurthy) to open his verified profile.",
+    target: "rlist",
+    view: "rankings",
+    align: "bottom"
+  },
+  {
+    step: 5,
+    title: "Step 5: Inspect Evidence Panel",
+    body: "Scroll down to see the verified evidence snippets. Every skill claim is matched with exact, anonymized quotes from their employment history.",
+    target: "profile-area",
+    view: "profile",
+    align: "top"
+  },
+  {
+    step: 6,
+    title: "Step 6: Compare Rank #1 vs Rank #2",
+    body: "Here we display a head-to-head comparison between Arjun and Priya, illustrating score differences and the final decision rationale.",
+    target: "comp-card-area",
+    view: "explainability",
+    align: "bottom"
+  },
+  {
+    step: 7,
+    title: "Step 7: Export Top 100 CSV",
+    body: "Download the final ranked shortlist as a clean, compliant CSV file ready for recruitment system ingestion.",
+    target: "btn-export-csv",
+    view: "rankings",
+    align: "bottom"
+  }
+];
+
+function startWalkthrough() {
+  wtCurrentStep = 1;
+  showWalkthroughStep(1);
+}
+
+function closeWalkthrough() {
+  const tt = document.getElementById('wt-tooltip');
+  if (tt) tt.style.display = 'none';
+  document.querySelectorAll('.wt-highlight').forEach(el => el.classList.remove('wt-highlight'));
+}
+
+function prevWalkthroughStep() {
+  if (wtCurrentStep > 1) {
+    wtCurrentStep--;
+    showWalkthroughStep(wtCurrentStep);
+  }
+}
+
+function nextWalkthroughStep() {
+  if (wtCurrentStep === 2) {
+    showWalkthroughStep(3);
+    runFullAIPipeline(() => {
+      setTimeout(() => {
+        wtCurrentStep = 4;
+        showWalkthroughStep(4);
+      }, 600);
+    });
+  } else if (wtCurrentStep < wtSteps.length) {
+    wtCurrentStep++;
+    showWalkthroughStep(wtCurrentStep);
+  } else {
+    closeWalkthrough();
+  }
+}
+
+function showWalkthroughStep(stepNum) {
+  const step = wtSteps.find(s => s.step === stepNum);
+  if (!step) return;
+  
+  document.querySelectorAll('.wt-highlight').forEach(el => el.classList.remove('wt-highlight'));
+  
+  sv(step.view);
+  
+  if (stepNum === 5) {
+    showProfile(CANDS[0].id);
+  }
+  
+  setTimeout(() => {
+    let targetEl = document.getElementById(step.target);
+    if (stepNum === 4) {
+      const podiumGold = document.querySelector('.podium-card.gold');
+      if (podiumGold) targetEl = podiumGold;
+    }
+    
+    if (!targetEl) return;
+    
+    targetEl.classList.add('wt-highlight');
+    
+    const tt = document.getElementById('wt-tooltip');
+    if (!tt) return;
+    
+    document.getElementById('wt-step-num').textContent = `Step ${step.step} of ${wtSteps.length}`;
+    document.getElementById('wt-title').textContent = step.title;
+    document.getElementById('wt-body').textContent = step.body;
+    
+    document.getElementById('wt-btn-prev').disabled = (stepNum === 1);
+    document.getElementById('wt-btn-next').textContent = (stepNum === wtSteps.length) ? "Finish" : "Next Step";
+    
+    tt.style.display = 'block';
+    
+    const rect = targetEl.getBoundingClientRect();
+    const ttRect = tt.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    let top = 0, left = 0;
+    
+    if (step.align === 'bottom') {
+      top = rect.bottom + scrollTop + 12;
+      left = rect.left + scrollLeft + (rect.width - ttRect.width) / 2;
+    } else if (step.align === 'top') {
+      top = rect.top + scrollTop - ttRect.height - 12;
+      left = rect.left + scrollLeft + (rect.width - ttRect.width) / 2;
+    } else if (step.align === 'center') {
+      top = (window.innerHeight - ttRect.height) / 2 + scrollTop;
+      left = (window.innerWidth - ttRect.width) / 2 + scrollLeft;
+    }
+    
+    if (left < 10) left = 10;
+    if (left + ttRect.width > window.innerWidth - 10) {
+      left = window.innerWidth - ttRect.width - 10;
+    }
+    if (top < 10) top = 10;
+    
+    tt.style.top = `${top}px`;
+    tt.style.left = `${left}px`;
+    
+    window.scrollTo({
+      top: Math.max(0, top - 150),
+      behavior: 'smooth'
+    });
+  }, 200);
 }
 
 /* INIT */
