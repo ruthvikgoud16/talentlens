@@ -79,7 +79,7 @@ https://linkedin.com/in/ruthvikgoud
 | GitHub Repository     | `https://github.com/ruthvikgoud16/talentlens`                   |
 | Developer Profile     | `https://github.com/ruthvikgoud16`                              |
 | LinkedIn              | `https://linkedin.com/in/ruthvikgoud`                           |
-| }                     |                                                                 |
+| Download Shortlist (CSV)| [`submission.csv`](submission.csv)                              |
 
 ## 💡 1. Problem Statement
 
