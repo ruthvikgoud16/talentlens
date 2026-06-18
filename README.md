@@ -10,14 +10,67 @@
 
 ---
 
-## 🏆 Hackathon Submission Details
+## 🌐 Live Demo
 
-* **GitHub Repository:** [https://github.com/ruthvikgoud16/talentlens](https://github.com/ruthvikgoud16/talentlens)
-* **Interactive Dashboard:** [talentlens_x.html](talentlens_x.html) *(Double-click to run locally in any browser)*
-* **Submission Demo Viewer:** [submission_demo.html](submission_demo.html) *(Double-click to view the static candidate comparison dashboard)*
-* **Contact Email:** [bathiniruthvik370@gmail.com](mailto:bathiniruthvik370@gmail.com)
+### 🎬 Submission Demo
+
+Experience the polished showcase and judge-facing presentation:
+
+```text
+https://talentlens-inky.vercel.app/submission_demo.html
+```
+
+### 📊 Interactive Dashboard
+
+Explore the complete TalentLens workspace with explainability, analytics, comparisons, and candidate insights:
+
+```text
+https://talentlens-inky.vercel.app/talentlens_x.html
+```
+
+### 🏠 Landing Page
+
+Access the main entry point to TalentLens:
+
+```text
+https://talentlens-inky.vercel.app/
+```
 
 ---
+
+## 🔗 Repository
+
+GitHub Repository:
+
+```text
+https://github.com/ruthvikgoud16/talentlens
+```
+
+Personal GitHub:
+
+```text
+https://github.com/ruthvikgoud16
+```
+
+LinkedIn:
+
+```text
+https://linkedin.com/in/ruthvikgoud
+```
+
+---
+
+## 🚀 Quick Access
+
+| Resource              | URL                                                             |
+| --------------------- | --------------------------------------------------------------- |
+| Homepage              | `https://talentlens-inky.vercel.app/`                           |
+| Submission Demo       | `https://talentlens-inky.vercel.app/submission_demo.html`       |
+| Interactive Dashboard | `https://talentlens-inky.vercel.app/talentlens_x.html`          |
+| GitHub Repository     | `https://github.com/ruthvikgoud16/talentlens`                   |
+| Developer Profile     | `https://github.com/ruthvikgoud16`                              |
+| LinkedIn              | `https://linkedin.com/in/ruthvikgoud`                           |
+| }                     |                                                                 |
 
 ## 💡 1. Problem Statement
 
