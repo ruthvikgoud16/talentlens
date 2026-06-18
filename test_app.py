@@ -25,7 +25,7 @@ mock_candidates = [
             {"name": "LLMs", "proficiency": "advanced", "duration_months": 15, "endorsements": 9}
         ],
         "career_history": [
-            {"title": "Senior AI Engineer", "company": "Tech Product Corp", "description": "Deployed semantic search infrastructure. Scaled vector similarity databases to production. Optimised latency."},
+            {"title": "Senior AI Engineer", "company": "Tech Product Corp", "description": "Deployed semantic retrieval and embedding search infrastructure using Sentence Transformers. Scaled vector databases to production. Optimised latency."},
             {"title": "Software Developer", "company": "SaaS Platform Inc", "description": "Developed indexing workflows and API routing."}
         ],
         "redrob_signals": {
@@ -94,6 +94,30 @@ mock_candidates = [
             "last_active_date": "2026-06-15",
             "notice_period_days": 30
         }
+    },
+    
+    # 4. Junior Candidate leaking title
+    {
+        "candidate_id": "CAND_JUNIOR_LEAK",
+        "profile": {
+            "headline": "Junior ML Engineer",
+            "summary": "Building embeddings-based retrieval systems.",
+            "current_title": "Junior Machine Learning Engineer",
+            "years_of_experience": 5.0
+        },
+        "skills": [
+            {"name": "Python", "proficiency": "advanced", "duration_months": 24},
+            {"name": "Retrieval", "proficiency": "intermediate", "duration_months": 12}
+        ],
+        "career_history": [
+            {"title": "Junior ML Engineer", "company": "Product Corp", "description": "Developed search retrieval workflows."}
+        ],
+        "redrob_signals": {
+            "recruiter_response_rate": 0.85,
+            "open_to_work_flag": True,
+            "last_active_date": "2026-06-15",
+            "notice_period_days": 30
+        }
     }
 ]
 
@@ -135,6 +159,13 @@ def run_tests():
         final_score = round(max(0.0, weighted - (penalty * 0.10)), 4)
         print(f"  --> Final Score  : {final_score}")
         
+        # Test Reasoning
+        reasoning = build_reasoning(
+            feat, matched_skills, prod_hits, domain_hits,
+            penalty, risk_reasons, recruit_index, career_score, rank=0
+        )
+        print(f"  --> Reasoning    : {reasoning}")
+        
         # Check Assertions
         if cand['candidate_id'] == "CAND_PERFECT_AI":
             # Must score high (typically > 75)
@@ -153,6 +184,11 @@ def run_tests():
             # Must be penalized for 100% consulting ratio
             assert career_score < 40.0, f"Consulting-only candidate should have very low career score! Score: {career_score}"
             print("  [PASS] Consulting ratio-based penalty verified.")
+            
+        elif cand['candidate_id'] == "CAND_JUNIOR_LEAK":
+            # Must score low due to Junior Title penalty
+            assert career_score < 40.0, f"Junior Candidate should have low career score! Score: {career_score}"
+            print("  [PASS] Junior Title penalty verified.")
 
     print("\n" + "=" * 60)
     print("  ALL SYSTEM DIAGNOSTIC TESTS PASSED SUCCESSFULLY!")

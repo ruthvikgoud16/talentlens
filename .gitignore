@@ -1,0 +1,16 @@
+# Large data files (exceed GitHub 100MB limit)
+candidates.jsonl
+full_output.csv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.env/
+
+# OS files
+.DS_Store
+Thumbs.db

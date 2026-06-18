@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentLens — Redrob Hackathon Submission | Ruthvik Goud</title>
+    <meta name="description" content="TalentLens: An AI-powered candidate ranking engine for the Redrob Hackathon. Explainable, multi-signal ranking of 100,000 candidates for a Senior AI Engineer role.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050810;
+            --surface: rgba(14, 18, 32, 0.85);
+            --surface-2: rgba(20, 26, 44, 0.7);
+            --border: rgba(255,255,255,0.06);
+            --border-accent: rgba(99, 179, 237, 0.3);
+            --cyan: #63b3ed;
+            --cyan-glow: rgba(99, 179, 237, 0.25);
+            --green: #68d391;
+            --green-glow: rgba(104, 211, 145, 0.25);
+            --purple: #b794f4;
+            --purple-glow: rgba(183, 148, 244, 0.25);
+            --orange: #f6ad55;
+            --orange-glow: rgba(246, 173, 85, 0.25);
+            --red: #fc8181;
+            --text: #e2e8f0;
+            --text-muted: #718096;
+            --text-dim: #4a5568;
+            --font: 'Inter', sans-serif;
+            --mono: 'Fira Code', monospace;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99, 179, 237, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 90%, rgba(183, 148, 244, 0.05) 0%, transparent 50%);
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(20px);
+            background: rgba(5, 8, 16, 0.8);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 0 20px var(--cyan-glow);
+        }
+
+        .brand-text h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-pills {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .pill.active {
+            background: rgba(99, 179, 237, 0.1);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            padding: 90px 48px 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(104, 211, 145, 0.08);
+            border: 1px solid rgba(104, 211, 145, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green-glow);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hero h2 {
+            font-size: clamp(2.2rem, 5vw, 3.6rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero h2 .highlight {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 680px;
+            line-height: 1.75;
+            margin-bottom: 40px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 48px;
+        }
+
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hero-stat .num {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: var(--mono);
+            color: var(--cyan);
+        }
+
+        .hero-stat .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--cyan), #4299e1);
+            color: #050810;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 0 20px var(--cyan-glow);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--cyan-glow); }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: transparent;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); }
+
+        /* ===== SECTION LAYOUT ===== */
+        section {
+            padding: 80px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--cyan);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .section-sub {
+            font-size: 1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 48px;
+        }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--border), transparent);
+            margin: 0 48px;
+        }
+
+        /* ===== ARCHITECTURE DIAGRAM ===== */
+        .arch-canvas {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arch-canvas::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(99,179,237,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .arch-pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .arch-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .arch-stage:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.4rem;
+            color: var(--text-dim);
+            z-index: 2;
+        }
+
+        .arch-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            border: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+
+        .arch-icon.cyan { background: rgba(99,179,237,0.1); border-color: var(--border-accent); box-shadow: 0 0 20px var(--cyan-glow); }
+        .arch-icon.green { background: rgba(104,211,145,0.1); border-color: rgba(104,211,145,0.3); box-shadow: 0 0 20px var(--green-glow); }
+        .arch-icon.purple { background: rgba(183,148,244,0.1); border-color: rgba(183,148,244,0.3); box-shadow: 0 0 20px var(--purple-glow); }
+        .arch-icon.orange { background: rgba(246,173,85,0.1); border-color: rgba(246,173,85,0.3); box-shadow: 0 0 20px var(--orange-glow); }
+
+        .arch-stage h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .arch-stage p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .arch-tag {
+            font-size: 0.65rem;
+            font-family: var(--mono);
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        /* Scoring weights row */
+        .weights-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .weight-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .weight-card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+        }
+
+        .weight-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .weight-card.cyan::before { background: linear-gradient(to right, var(--cyan), transparent); }
+        .weight-card.green::before { background: linear-gradient(to right, var(--green), transparent); }
+        .weight-card.purple::before { background: linear-gradient(to right, var(--purple), transparent); }
+        .weight-card.orange::before { background: linear-gradient(to right, var(--orange), transparent); }
+
+        .weight-pct {
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: var(--mono);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .weight-card.cyan .weight-pct { color: var(--cyan); }
+        .weight-card.green .weight-pct { color: var(--green); }
+        .weight-card.purple .weight-pct { color: var(--purple); }
+        .weight-card.orange .weight-pct { color: var(--orange); }
+
+        .weight-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .weight-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .weight-signals {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .signal-chip {
+            font-size: 0.65rem;
+            font-family: var(--mono);
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        /* ===== RESULTS TABLE ===== */
+        .results-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .results-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: var(--mono);
+        }
+
+        .results-count strong { color: var(--cyan); }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(99,179,237,0.06);
+        }
+
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        thead {
+            background: rgba(0,0,0,0.3);
+        }
+
+        thead th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
+            cursor: pointer;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+
+        tbody tr:hover { background: rgba(99,179,237,0.04); }
+
+        tbody tr.top3 { background: rgba(99,179,237,0.03); }
+
+        td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            font-family: var(--mono);
+        }
+
+        .rank-badge.gold { background: rgba(246,173,85,0.15); color: var(--orange); border: 1px solid rgba(246,173,85,0.3); }
+        .rank-badge.silver { background: rgba(226,232,240,0.1); color: #a0aec0; border: 1px solid rgba(226,232,240,0.2); }
+        .rank-badge.bronze { background: rgba(205,132,63,0.1); color: #c17334; border: 1px solid rgba(205,132,63,0.2); }
+        .rank-badge.default { background: rgba(255,255,255,0.03); color: var(--text-muted); border: 1px solid var(--border); }
+
+        .cand-id {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        .score-bar-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 130px;
+        }
+
+        .score-val {
+            font-family: var(--mono);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #fff;
+            min-width: 38px;
+        }
+
+        .mini-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(to right, var(--cyan), var(--purple));
+        }
+
+        .recruit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .recruit-badge.high { background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.25); }
+        .recruit-badge.mid { background: rgba(246,173,85,0.1); color: var(--orange); border: 1px solid rgba(246,173,85,0.25); }
+        .recruit-badge.low { background: rgba(252,129,129,0.1); color: var(--red); border: 1px solid rgba(252,129,129,0.25); }
+
+        .reasoning-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            max-width: 320px;
+        }
+
+        .reasoning-text strong { color: var(--text); }
+
+        /* ===== ARCHITECTURE NOTE CARD ===== */
+        .arch-note {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arch-note::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(183,148,244,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .arch-note-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+
+        .arch-note-section h4 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .arch-note-section ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .arch-note-section li {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding-left: 16px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .arch-note-section li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--cyan);
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            overflow-x: auto;
+        }
+
+        .code-block .kw { color: var(--purple); }
+        .code-block .fn { color: var(--cyan); }
+        .code-block .str { color: var(--green); }
+        .code-block .num { color: var(--orange); }
+        .code-block .cmt { color: var(--text-dim); font-style: italic; }
+
+        /* ===== DECLARATION BOX ===== */
+        .declaration {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .decl-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .decl-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .decl-icon.green { background: rgba(104,211,145,0.1); }
+        .decl-icon.cyan { background: rgba(99,179,237,0.1); }
+        .decl-icon.purple { background: rgba(183,148,244,0.1); }
+
+        .decl-text h5 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .decl-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 40px 48px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        footer a { color: var(--cyan); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ===== FLOW DIAGRAM ===== */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-family: var(--mono);
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .flow-box {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        .flow-box.input { background: rgba(99,179,237,0.08); border-color: rgba(99,179,237,0.3); color: var(--cyan); }
+        .flow-box.process { background: rgba(183,148,244,0.08); border-color: rgba(183,148,244,0.3); color: var(--purple); }
+        .flow-box.output { background: rgba(104,211,145,0.08); border-color: rgba(104,211,145,0.3); color: var(--green); }
+        .flow-box.warn { background: rgba(252,129,129,0.08); border-color: rgba(252,129,129,0.3); color: var(--red); }
+
+        .flow-arrow {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            padding: 0 8px;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeInUp 0.6s ease forwards; }
+        .fade-in-delay-1 { animation: fadeInUp 0.6s ease 0.1s forwards; opacity: 0; }
+        .fade-in-delay-2 { animation: fadeInUp 0.6s ease 0.2s forwards; opacity: 0; }
+        .fade-in-delay-3 { animation: fadeInUp 0.6s ease 0.3s forwards; opacity: 0; }
+
+        /* ===== EXPANDED ROW ===== */
+        .expanded-row { display: none; }
+        .expanded-row td {
+            padding: 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .expanded-content {
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.2);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .exp-stat { display: flex; flex-direction: column; gap: 4px; }
+        .exp-stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .exp-stat-val { font-size: 0.9rem; font-weight: 700; font-family: var(--mono); }
+
+        @media (max-width: 900px) {
+            .site-header { padding: 16px 24px; }
+            .hero, section { padding: 60px 24px; }
+            .divider { margin: 0 24px; }
+            .arch-pipeline { flex-wrap: wrap; }
+            .weights-grid { grid-template-columns: repeat(2, 1fr); }
+            .arch-note-grid { grid-template-columns: 1fr; }
+            .declaration { grid-template-columns: 1fr; }
+            footer { flex-direction: column; gap: 12px; text-align: center; }
+            .hero-stats { flex-wrap: wrap; gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+    <div class="header-brand">
+        <div class="brand-icon">🔭</div>
+        <div class="brand-text">
+            <h1>TalentLens</h1>
+            <p>Redrob Hackathon · 2026</p>
+        </div>
+    </div>
+    <div class="header-pills">
+        <div class="pill active">Submission</div>
+        <div class="pill">Ruthvik Goud</div>
+        <div class="pill">Solo Entry</div>
+    </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<div class="hero fade-in">
+    <div class="hero-eyebrow">Submission Live · All Tests Passing</div>
+    <h2>
+        Explainable, Multi-Signal<br>
+        <span class="highlight">Candidate Ranking Engine</span>
+    </h2>
+    <p class="hero-desc">
+        TalentLens ranks 100,000 candidates against a Senior AI Engineer job description using four weighted scoring engines — Career Evidence, Skill Relevance, Recruitability Index, and Semantic Match — producing ranked, explainable results in under 3 minutes on a standard CPU.
+    </p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <span class="num">100K</span>
+            <span class="lbl">Candidates Scored</span>
+        </div>
+        <div class="hero-stat">
+            <span class="num">&lt;3 min</span>
+            <span class="lbl">Full Pipeline Runtime</span>
+        </div>
+        <div class="hero-stat">
+            <span class="num">4</span>
+            <span class="lbl">Scoring Engines</span>
+        </div>
+        <div class="hero-stat">
+            <span class="num">~80</span>
+            <span class="lbl">Honeypots Detected</span>
+        </div>
+    </div>
+    <div class="hero-cta">
+        <a href="https://github.com/ruthvikgoud16/talentlens" class="btn-primary" target="_blank">
+            ⬡ View on GitHub
+        </a>
+        <a href="talentlens_x.html" class="btn-secondary" target="_blank">
+            ▶ Live Demo Workspace
+        </a>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== SYSTEM ARCHITECTURE ===== -->
+<section id="architecture">
+    <div class="section-eyebrow">System Architecture</div>
+    <div class="section-title">Four-Stage Ranking Pipeline</div>
+    <p class="section-sub">
+        A deterministic, fully local pipeline — no API calls during inference. Every score is traceable back to specific signals in the candidate's profile.
+    </p>
+
+    <div class="arch-canvas">
+        <div class="arch-pipeline">
+            <!-- Stage 1 -->
+            <div class="arch-stage">
+                <div class="arch-icon cyan">📂</div>
+                <h4>1. Data Ingest</h4>
+                <p>JSONL / GZ stream loading with schema validation</p>
+                <span class="arch-tag">candidates.jsonl</span>
+                <span class="arch-tag">job_description.txt</span>
+            </div>
+            <!-- Stage 2 -->
+            <div class="arch-stage">
+                <div class="arch-icon purple">⚙️</div>
+                <h4>2. Feature Extraction</h4>
+                <p>Normalized skill matching, career history parsing, signal processing</p>
+                <span class="arch-tag">extract_features()</span>
+                <span class="arch-tag">normalize_skill()</span>
+            </div>
+            <!-- Stage 3 -->
+            <div class="arch-stage">
+                <div class="arch-icon orange">🧮</div>
+                <h4>3. Multi-Signal Scoring</h4>
+                <p>Career, Skills, Recruitability, TF-IDF Semantic + Honeypot Penalty</p>
+                <span class="arch-tag">score_career()</span>
+                <span class="arch-tag">score_skills()</span>
+            </div>
+            <!-- Stage 4 -->
+            <div class="arch-stage">
+                <div class="arch-icon green">📊</div>
+                <h4>4. Rank & Explain</h4>
+                <p>Weighted aggregation, monotonic sort, human-readable reasoning output</p>
+                <span class="arch-tag">submission.csv</span>
+                <span class="arch-tag">reasoning</span>
+            </div>
+        </div>
+
+        <!-- Data Flow -->
+        <div style="margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border);">
+            <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:2px; margin-bottom: 16px;">Data Flow</div>
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box input">candidates.jsonl (100K records)</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box process">extract_features(): 22 feature dimensions</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box process">TF-IDF fit (corpus + JD, 5K features)</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box process">4 scoring engines run in parallel</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box output">submission.csv (Top 100 ranked)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoring Weights -->
+    <div class="weights-grid" style="margin-top: 32px;">
+        <div class="weight-card cyan">
+            <div class="weight-pct">35%</div>
+            <div class="weight-name">Career Evidence &amp; Trajectory</div>
+            <div class="weight-desc">Rewards production deployments in retrieval/search/ranking. Penalizes consulting-only backgrounds (ratio-based) and non-domain roles (CV, Speech, Robotics).</div>
+            <div class="weight-signals">
+                <span class="signal-chip">prod_hits</span>
+                <span class="signal-chip">domain_hits</span>
+                <span class="signal-chip">exp_scale</span>
+                <span class="signal-chip">trajectory_mult</span>
+                <span class="signal-chip">consulting_penalty</span>
+            </div>
+        </div>
+        <div class="weight-card green">
+            <div class="weight-pct">25%</div>
+            <div class="weight-name">Recruitability Index</div>
+            <div class="weight-desc">Weights recency (last active date), response rate, completion rate, notice period, open-to-work flag, GitHub activity, and profile completeness.</div>
+            <div class="weight-signals">
+                <span class="signal-chip">recency_mult</span>
+                <span class="signal-chip">resp_rate</span>
+                <span class="signal-chip">notice_days</span>
+                <span class="signal-chip">open_to_work</span>
+                <span class="signal-chip">github_score</span>
+            </div>
+        </div>
+        <div class="weight-card purple">
+            <div class="weight-pct">25%</div>
+            <div class="weight-name">Explicit Skill Relevance</div>
+            <div class="weight-desc">Separates 14 must-have skills (embeddings, FAISS, Weaviate, etc.) from nice-to-haves using proficiency tier and duration_months as quality signals.</div>
+            <div class="weight-signals">
+                <span class="signal-chip">is_skill_match()</span>
+                <span class="signal-chip">prof_mult</span>
+                <span class="signal-chip">dur_mult</span>
+                <span class="signal-chip">assessment_bonus</span>
+            </div>
+        </div>
+        <div class="weight-card orange">
+            <div class="weight-pct">15%</div>
+            <div class="weight-name">Semantic Match (TF-IDF)</div>
+            <div class="weight-desc">Single TF-IDF vectorizer fitted once across all 100K candidates + JD text. Cosine similarity captures vocabulary overlap missed by keyword matching.</div>
+            <div class="weight-signals">
+                <span class="signal-chip">TfidfVectorizer</span>
+                <span class="signal-chip">ngram (1,2)</span>
+                <span class="signal-chip">cosine_similarity</span>
+                <span class="signal-chip">sublinear_tf</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== RANKED RESULTS ===== -->
+<section id="results">
+    <div class="section-eyebrow">Ranked Output</div>
+    <div class="section-title">Top 100 Candidates</div>
+    <p class="section-sub">
+        Monotonically ranked by weighted aggregate score. Click any row to expand sub-scores. All scores normalized to 0–100.
+    </p>
+
+    <div class="results-controls">
+        <div class="results-count">
+            Showing <strong id="showing-count">100</strong> of <strong>100,000</strong> candidates · Top 100 selected
+        </div>
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="filterTable('all', this)">All</button>
+            <button class="filter-btn" onclick="filterTable('top10', this)">Top 10</button>
+            <button class="filter-btn" onclick="filterTable('top25', this)">Top 25</button>
+            <button class="filter-btn" onclick="filterTable('high-recruit', this)">High Recruitability</button>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate ID</th>
+                    <th>Final Score</th>
+                    <th>Recruitability</th>
+                    <th>Recruiter Reasoning</th>
+                </tr>
+            </thead>
+            <tbody id="results-tbody">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== ARCHITECTURE NOTE ===== -->
+<section id="arch-note">
+    <div class="section-eyebrow">System Architecture Note</div>
+    <div class="section-title">Engineering Decisions</div>
+    <p class="section-sub">Key design choices made to maximize ranking quality and explainability.</p>
+
+    <div class="arch-note">
+        <div class="arch-note-grid">
+            <div class="arch-note-section">
+                <h4>⚡ Performance</h4>
+                <ul>
+                    <li>Single TF-IDF fit across the entire corpus (not per-candidate) — prevents data leakage and reduces compute to O(N)</li>
+                    <li>Streaming JSONL reader with GZ support — handles datasets too large for RAM</li>
+                    <li>Vectorized scoring with NumPy; no deep learning inference at runtime</li>
+                    <li>Full 100K pipeline completes in ~3 minutes on 4-core CPU, 16GB RAM</li>
+                </ul>
+            </div>
+            <div class="arch-note-section">
+                <h4>🎯 JD-Driven Design</h4>
+                <ul>
+                    <li>Every penalty and reward maps to an explicit signal in the job description text</li>
+                    <li>Consulting firm penalty is ratio-based (not binary) — partial consulting histories are scored proportionally</li>
+                    <li>Skill ceiling set at 13.0 pts (not 25+) to prevent score compression and allow realistic top scores</li>
+                    <li>Notice period scoring mirrors JD's stated preference: sub-30 days buyable, &gt;90 days is a hard bar raise</li>
+                </ul>
+            </div>
+            <div class="arch-note-section">
+                <h4>🛡️ Anti-Honeypot Logic</h4>
+                <ul>
+                    <li>Detects impossible claim/evidence contradictions: "claims 15+ years but zero career entries"</li>
+                    <li>Flags AI/ML headline with zero technical description evidence (keyword stuffing)</li>
+                    <li>Penalizes non-technical career histories with AI skill keywords</li>
+                    <li>Penalties are bounded (max 100 pts) and applied as a multiplier (10%) on final score, not a hard disqualification — preserving explainability</li>
+                </ul>
+            </div>
+            <div class="arch-note-section">
+                <h4>📝 Explainability</h4>
+                <ul>
+                    <li>Every candidate gets a two-sentence natural language reasoning string generated deterministically from their score components</li>
+                    <li>Full component scores exported in <code>full_output.csv</code> for recruiter inspection</li>
+                    <li>Skill normalization (hyphen, spacing, plural stripping) exposed via <code>normalize_skill()</code> — auditable</li>
+                    <li>Test suite (<code>test_app.py</code>) verifies correct scoring on 3 archetypal candidate profiles</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top: 28px;">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--cyan); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">Weighted Score Formula</div>
+            <div class="code-block">
+<span class="cmt"># Weighted aggregate — weights derived from JD signal priority</span>
+<span class="kw">weighted_score</span> = (
+    <span class="fn">score_career</span>(feat)       * <span class="num">0.35</span>   <span class="cmt"># Career Evidence &amp; Trajectory</span>
+  + <span class="fn">score_recruitability</span>(feat) * <span class="num">0.25</span>   <span class="cmt"># Availability &amp; Responsiveness</span>
+  + <span class="fn">score_skills</span>(feat)         * <span class="num">0.25</span>   <span class="cmt"># Explicit Skill Relevance</span>
+  + <span class="fn">tfidf_cosine_similarity</span>     * <span class="num">0.15</span>   <span class="cmt"># Semantic Match</span>
+)
+<span class="kw">final_score</span> = <span class="fn">max</span>(<span class="num">0.0</span>, weighted_score - honeypot_penalty * <span class="num">0.10</span>)
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== DECLARATIONS ===== -->
+<section id="declarations">
+    <div class="section-eyebrow">Submission Declarations</div>
+    <div class="section-title">Compliance &amp; Reproducibility</div>
+    <div class="declaration" style="margin-top: 32px;">
+        <div class="decl-card">
+            <div class="decl-icon green">✅</div>
+            <div class="decl-text">
+                <h5>Original Work</h5>
+                <p>All scoring logic is original. No pre-built matching libraries used. AI tools (Claude) used for architectural discussion and code review only — no candidate data was processed by any LLM.</p>
+            </div>
+        </div>
+        <div class="decl-card">
+            <div class="decl-icon cyan">🔁</div>
+            <div class="decl-text">
+                <h5>Reproducible</h5>
+                <p>Single command: <code>python app.py</code>. Place <code>candidates.jsonl</code> in directory. No pre-computation, no GPU, no internet required. Runtime: ~3 minutes on standard CPU.</p>
+            </div>
+        </div>
+        <div class="decl-card">
+            <div class="decl-icon purple">🧪</div>
+            <div class="decl-text">
+                <h5>Tested</h5>
+                <p>Test suite in <code>test_app.py</code> validates three archetypal candidates: Perfect AI Engineer (must score &gt;70), CV Specialist (must score &lt;40), Consulting Developer (career &lt;40).</p>
+            </div>
+        </div>
+        <div class="decl-card">
+            <div class="decl-icon green">🏛️</div>
+            <div class="decl-text">
+                <h5>Spec Compliant</h5>
+                <p>Output CSV has columns: <code>candidate_id, rank, score, reasoning</code>. Exactly 100 rows. Scores are monotonically non-increasing. Ties broken by <code>candidate_id</code> ascending.</p>
+            </div>
+        </div>
+        <div class="decl-card">
+            <div class="decl-icon cyan">🌐</div>
+            <div class="decl-text">
+                <h5>No Network at Runtime</h5>
+                <p>Zero external API calls during ranking. All computation is local: TF-IDF, skill matching, and scoring engines run entirely in-process with no internet dependency.</p>
+            </div>
+        </div>
+        <div class="decl-card">
+            <div class="decl-icon purple">🔎</div>
+            <div class="decl-text">
+                <h5>Honeypot-Aware</h5>
+                <p>Contradiction detection engine identifies ~80 honeypot profiles via impossible claim-to-evidence ratios. Penalties are applied proportionally rather than as hard filters.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div>
+        <strong>TalentLens</strong> — Redrob Hackathon Submission 2026 &nbsp;·&nbsp;
+        Team: <strong>Ruthvik Goud</strong> &nbsp;·&nbsp;
+        <a href="mailto:bathiniruthvik370@gmail.com">bathiniruthvik370@gmail.com</a>
+    </div>
+    <div>
+        <a href="https://github.com/ruthvikgoud16/talentlens" target="_blank">GitHub Repo</a>
+        &nbsp;·&nbsp;
+        <a href="talentlens_x.html" target="_blank">Interactive Demo</a>
+        &nbsp;·&nbsp;
+        <a href="submission.csv">submission.csv</a>
+    </div>
+</footer>
+
+<script>
+    // ===== CANDIDATE DATA (from submission.csv) =====
+                        const candidates = [
+        { rank:1, id:"CAND_0086022", score:77.24, recruit:"High (75)", recruitVal:75, reasoning:"Candidate is a 5.3-year Senior Applied Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, sentence-transformers, pinecone. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (75/100), career progression to senior roles. Concerns: Unverified skills: vector, sentence-transformers. Moderate recruitability score of 75/100; check responsiveness." },
+        { rank:2, id:"CAND_0079387", score:76.79, recruit:"High (79)", recruitVal:79, reasoning:"Candidate is a 6.9-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, sentence-transformers, opensearch, python. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (64/100). Concerns: Unverified skills: vector, opensearch. Moderate recruitability score of 79/100; check responsiveness." },
+        { rank:3, id:"CAND_0005649", score:76.56, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 7.4-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, weaviate, search, llm. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (81/100), career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: weaviate. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:4, id:"CAND_0088025", score:76.06, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 8.6-year Staff Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, pinecone, elasticsearch, python. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (75/100), career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: vector, elasticsearch. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:5, id:"CAND_0018499", score:76.01, recruit:"High (82)", recruitVal:82, reasoning:"Candidate is a 7.2-year Senior Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, milvus, weaviate. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: strong GitHub activity signal (95/100), career progression to senior roles. Concerns: Unverified skills: milvus, weaviate. Highly active and reachable (Recruitability: 82/100)." },
+        { rank:6, id:"CAND_0066376", score:75.86, recruit:"Mod (65)", recruitVal:65, reasoning:"Candidate is a 5.7-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, faiss, nlp, search. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Notice period of 90 days; unverified skills: nlp. Moderate recruitability score of 65/100; check responsiveness." },
+        { rank:7, id:"CAND_0081846", score:75.47, recruit:"High (80)", recruitVal:80, reasoning:"Candidate is a 6.7-year Lead Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, qdrant. Key strengths include retrieval & embeddings experience (hits: 6), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: qdrant, elasticsearch. Moderate recruitability score of 80/100; check responsiveness." },
+        { rank:8, id:"CAND_0079064", score:74.95, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 5.2-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include pinecone, opensearch, nlp, search. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Long notice period of 120 days; unverified skills: opensearch, nlp. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:9, id:"CAND_0028793", score:74.87, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 7.2-year Search Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, nlp. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (83/100). Concerns: Long notice period of 120 days; unverified skills: vector, nlp. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:10, id:"CAND_0081686", score:74.64, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 6.0-year Search Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, faiss, milvus, python. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (46/100). Concerns: Unverified skills: milvus, python. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:11, id:"CAND_0077337", score:74.36, recruit:"High (87)", recruitVal:87, reasoning:"Candidate is a 7.0-year Staff Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, sentence-transformers, qdrant. Key strengths include retrieval & embeddings experience (hits: 5), ranking and search systems optimization (hits: 3), production ML experience (hits: 5). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (68/100), career progression to senior roles. Concerns: Unverified skills: qdrant, pinecone. Highly active and reachable (Recruitability: 87/100)." },
+        { rank:12, id:"CAND_0039754", score:74.07, recruit:"High (82)", recruitVal:82, reasoning:"Candidate is a 16.2-year Senior Applied Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 6), vector database scale (hits: 3), ranking and search systems optimization (hits: 5). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (78/100), career progression to senior roles. Concerns: Unverified skills: qdrant, weaviate. Highly active and reachable (Recruitability: 82/100)." },
+        { rank:13, id:"CAND_0046525", score:73.47, recruit:"High (83)", recruitVal:83, reasoning:"Candidate is a 6.1-year Senior Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, sentence-transformers, qdrant. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: vector, sentence-transformers. Highly active and reachable (Recruitability: 83/100)." },
+        { rank:14, id:"CAND_0055992", score:73.34, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 16.9-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, faiss, milvus. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (65/100). Concerns: Unverified skills: milvus, opensearch. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:15, id:"CAND_0058575", score:72.55, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 5.8-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, pinecone, machine learning, pytorch. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory. Concerns: Notice period of 90 days. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:16, id:"CAND_0044883", score:72.43, recruit:"Mod (68)", recruitVal:68, reasoning:"Candidate is a 6.3-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, search, pytorch, llm. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (70/100). Concerns: Notice period of 90 days. Moderate recruitability score of 68/100; check responsiveness." },
+        { rank:17, id:"CAND_0086151", score:72.24, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.7-year Recommendation Systems Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, sentence-transformers, qdrant, opensearch. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (52/100). Concerns: Long notice period of 120 days; unverified skills: qdrant, opensearch. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:18, id:"CAND_0005260", score:72.24, recruit:"Mod (67)", recruitVal:67, reasoning:"Candidate is a 5.2-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, python. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: career progression to senior roles. Concerns: Unverified skills: vector, python. Moderate recruitability score of 67/100; check responsiveness." },
+        { rank:19, id:"CAND_0010257", score:72.16, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 6.5-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, milvus, qdrant, opensearch. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 3), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (46/100), career progression to senior roles. Concerns: Long notice period of 120 days; unverified skills: vector, milvus. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:20, id:"CAND_0060054", score:72.05, recruit:"Mod (57)", recruitVal:57, reasoning:"Candidate is a 6.4-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include faiss, weaviate, elasticsearch, search. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 4). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: weaviate. Moderate recruitability score of 57/100; check responsiveness." },
+        { rank:21, id:"CAND_0055905", score:71.14, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 8.1-year Senior Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, opensearch. Key strengths include retrieval & embeddings experience (hits: 6), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: opensearch, elasticsearch. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:22, id:"CAND_0068811", score:70.38, recruit:"High (78)", recruitVal:78, reasoning:"Candidate is a 8.0-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, qdrant, weaviate. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 78/100; check responsiveness." },
+        { rank:23, id:"CAND_0046064", score:70.08, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 8.9-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include pinecone, opensearch, elasticsearch, python. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 3), ranking and search systems optimization (hits: 5). FutureFit signals: strong GitHub activity signal (67/100), career progression to senior roles. Concerns: Unverified skills: opensearch, elasticsearch. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:24, id:"CAND_0080766", score:70.06, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 8.8-year Staff Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, milvus, opensearch, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 4), ranking and search systems optimization (hits: 2), production ML experience (hits: 6). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: milvus, opensearch. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:25, id:"CAND_0075249", score:69.97, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 6.2-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, milvus, pinecone, machine learning. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: milvus, pinecone. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:26, id:"CAND_0051292", score:69.95, recruit:"Mod (70)", recruitVal:70, reasoning:"Candidate is a 5.2-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, faiss, elasticsearch, nlp. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (62/100). Concerns: Unverified skills: vector, nlp. Moderate recruitability score of 70/100; check responsiveness." },
+        { rank:27, id:"CAND_0029367", score:69.90, recruit:"High (75)", recruitVal:75, reasoning:"Candidate is a 5.7-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, sentence-transformers, faiss, pinecone. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: vector, nlp. Moderate recruitability score of 75/100; check responsiveness." },
+        { rank:28, id:"CAND_0011687", score:69.88, recruit:"High (78)", recruitVal:78, reasoning:"Candidate is a 7.8-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, faiss, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 3). FutureFit signals: strong GitHub activity signal (76/100), career progression to senior roles. Concerns: Unverified skills: faiss, weaviate. Moderate recruitability score of 78/100; check responsiveness." },
+        { rank:29, id:"CAND_0071974", score:69.60, recruit:"High (75)", recruitVal:75, reasoning:"Candidate is a 7.8-year Senior Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, sentence-transformers, qdrant. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 1), ranking and search systems optimization (hits: 3). FutureFit signals: strong GitHub activity signal (83/100), career progression to senior roles. Concerns: Unverified skills: qdrant, weaviate. Moderate recruitability score of 75/100; check responsiveness." },
+        { rank:30, id:"CAND_0096172", score:69.58, recruit:"Mod (62)", recruitVal:62, reasoning:"Candidate is a 5.2-year Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, qdrant, opensearch, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (65/100). Concerns: Unverified skills: qdrant, opensearch. Moderate recruitability score of 62/100; check responsiveness." },
+        { rank:31, id:"CAND_0010685", score:69.50, recruit:"Mod (61)", recruitVal:61, reasoning:"Candidate is a 6.7-year Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, elasticsearch, search, machine learning. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. No significant risk factors or inconsistencies detected. Moderate recruitability score of 61/100; check responsiveness." },
+        { rank:32, id:"CAND_0044855", score:69.36, recruit:"Mod (70)", recruitVal:70, reasoning:"Candidate is a 6.6-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, qdrant. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (47/100), career progression to senior roles. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 70/100; check responsiveness." },
+        { rank:33, id:"CAND_0083307", score:69.35, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.8-year Search Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, weaviate, pinecone. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (69/100). Concerns: Long notice period of 120 days; unverified skills: vector, weaviate. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:34, id:"CAND_0007009", score:69.05, recruit:"High (76)", recruitVal:76, reasoning:"Candidate is a 7.9-year Recommendation Systems Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, sentence-transformers, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (69/100). Concerns: Unverified skills: weaviate, opensearch. Moderate recruitability score of 76/100; check responsiveness." },
+        { rank:35, id:"CAND_0077285", score:68.84, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 5.5-year Recommendation Systems Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, sentence-transformers, faiss. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (76/100). Concerns: Unverified skills: retrieval, sentence-transformers. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:36, id:"CAND_0033861", score:68.08, recruit:"Low (48)", recruitVal:48, reasoning:"Candidate is a 8.0-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, sentence-transformers, milvus, qdrant. Key strengths include retrieval & embeddings experience (hits: 5), ranking and search systems optimization (hits: 3), production ML experience (hits: 7). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: milvus, qdrant. Low recruitability score of 48/100; candidate may be passive." },
+        { rank:37, id:"CAND_0002025", score:67.82, recruit:"High (90)", recruitVal:90, reasoning:"Candidate is a 5.9-year Senior Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, faiss, weaviate, pinecone. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 4). FutureFit signals: strong GitHub activity signal (97/100), career progression to senior roles. Concerns: Unverified skills: faiss, weaviate. Highly active and reachable (Recruitability: 90/100)." },
+        { rank:38, id:"CAND_0008425", score:67.74, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 7.8-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, sentence-transformers, qdrant. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 1), ranking and search systems optimization (hits: 4). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (53/100), career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: qdrant, python. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:39, id:"CAND_0095528", score:67.72, recruit:"Mod (67)", recruitVal:67, reasoning:"Candidate is a 5.3-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, opensearch, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 67/100; check responsiveness." },
+        { rank:40, id:"CAND_0030953", score:67.43, recruit:"Mod (61)", recruitVal:61, reasoning:"Candidate is a 7.8-year Search Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, python. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 4). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 61/100; check responsiveness." },
+        { rank:41, id:"CAND_0041669", score:67.42, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 8.0-year Recommendation Systems Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, faiss, milvus, qdrant. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (71/100). Concerns: Unverified skills: retrieval, faiss. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:42, id:"CAND_0030031", score:67.21, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 5.7-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, sentence-transformers, milvus. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 3), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: retrieval, vector. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:43, id:"CAND_0057563", score:67.09, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 6.8-year Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include opensearch, elasticsearch, search, machine learning. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: opensearch. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:44, id:"CAND_0020877", score:67.08, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 5.1-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, milvus, qdrant, weaviate. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (74/100). Concerns: Unverified skills: milvus, qdrant. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:45, id:"CAND_0076251", score:66.09, recruit:"Mod (68)", recruitVal:68, reasoning:"Candidate is a 7.6-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include weaviate, elasticsearch, search, transformers. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: weaviate. Moderate recruitability score of 68/100; check responsiveness." },
+        { rank:46, id:"CAND_0094759", score:65.98, recruit:"Mod (54)", recruitVal:54, reasoning:"Candidate is a 8.6-year Lead Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, faiss, qdrant, weaviate. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (76/100), career progression to senior roles. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 54/100; check responsiveness." },
+        { rank:47, id:"CAND_0044222", score:65.70, recruit:"Mod (70)", recruitVal:70, reasoning:"Candidate is a 7.7-year Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 70/100; check responsiveness." },
+        { rank:48, id:"CAND_0039383", score:64.32, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 7.1-year Applied Ml Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, faiss, elasticsearch, nlp. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (86/100). Concerns: Notice period of 90 days; unverified skills: vector, nlp. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:49, id:"CAND_0053695", score:64.30, recruit:"Mod (68)", recruitVal:68, reasoning:"Candidate is a 5.8-year Recommendation Systems Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, sentence-transformers, pinecone. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (68/100). Concerns: Unverified skills: embeddings, vector. Moderate recruitability score of 68/100; check responsiveness." },
+        { rank:50, id:"CAND_0043228", score:64.28, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 6.8-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, sentence-transformers, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (48/100). Concerns: Unverified skills: vector, weaviate. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:51, id:"CAND_0061265", score:64.21, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 6.6-year Recommendation Systems Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, milvus, qdrant. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (80/100). Concerns: Long notice period of 120 days; unverified skills: embeddings, vector. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:52, id:"CAND_0093912", score:63.96, recruit:"High (79)", recruitVal:79, reasoning:"Candidate is a 5.3-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, milvus, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (82/100), career progression to senior roles. Concerns: Unverified skills: embeddings, vector. Moderate recruitability score of 79/100; check responsiveness." },
+        { rank:53, id:"CAND_0031593", score:63.85, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 7.8-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, elasticsearch, search, machine learning. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). Standard learning and progression trajectory. Concerns: Notice period of 90 days; unverified skills: elasticsearch. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:54, id:"CAND_0026532", score:63.55, recruit:"Mod (68)", recruitVal:68, reasoning:"Candidate is a 4.8-year Recommendation Systems Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, faiss. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Notice period of 90 days; unverified skills: vector, milvus. Moderate recruitability score of 68/100; check responsiveness." },
+        { rank:55, id:"CAND_0016163", score:63.49, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 6.7-year Applied Ml Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, weaviate, pinecone. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (95/100). Concerns: Long notice period of 120 days; unverified skills: embeddings, vector. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:56, id:"CAND_0011432", score:63.20, recruit:"Mod (59)", recruitVal:59, reasoning:"Candidate is a 7.6-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, opensearch, elasticsearch, search. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: career progression to senior roles. Concerns: Unverified skills: vector, opensearch. Moderate recruitability score of 59/100; check responsiveness." },
+        { rank:57, id:"CAND_0007411", score:63.00, recruit:"Low (43)", recruitVal:43, reasoning:"Candidate is a 8.0-year Senior Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, pinecone, opensearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 3). FutureFit signals: strong GitHub activity signal (90/100), career progression to senior roles. Concerns: Unverified skills: vector, opensearch. Low recruitability score of 43/100; candidate may be passive." },
+        { rank:58, id:"CAND_0069905", score:62.83, recruit:"Mod (73)", recruitVal:73, reasoning:"Candidate is a 6.6-year Applied Ml Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, weaviate, python, machine learning. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (45/100). Concerns: Notice period of 90 days; unverified skills: weaviate, python. Moderate recruitability score of 73/100; check responsiveness." },
+        { rank:59, id:"CAND_0054123", score:62.63, recruit:"Mod (65)", recruitVal:65, reasoning:"Candidate is a 4.7-year Applied Ml Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, python. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (72/100). Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 65/100; check responsiveness." },
+        { rank:60, id:"CAND_0027691", score:62.60, recruit:"High (76)", recruitVal:76, reasoning:"Candidate is a 6.5-year Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include embeddings, weaviate, python, search. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (58/100). Concerns: Unverified skills: embeddings, weaviate. Moderate recruitability score of 76/100; check responsiveness." },
+        { rank:61, id:"CAND_0065195", score:62.42, recruit:"High (86)", recruitVal:86, reasoning:"Candidate is a 5.1-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, elasticsearch, search. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), production ML experience (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (87/100). Concerns: Unverified skills: vector, qdrant. Highly active and reachable (Recruitability: 86/100)." },
+        { rank:62, id:"CAND_0041611", score:62.25, recruit:"Low (37)", recruitVal:37, reasoning:"Candidate is a 6.4-year Staff Machine Learning Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, sentence-transformers, qdrant, weaviate. Key strengths include retrieval & embeddings experience (hits: 6), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: qdrant, weaviate. Low recruitability score of 37/100; candidate may be passive." },
+        { rank:63, id:"CAND_0027801", score:61.87, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.4-year Nlp Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, faiss, milvus, opensearch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (63/100). Concerns: Long notice period of 120 days; unverified skills: vector, milvus. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:64, id:"CAND_0092278", score:61.49, recruit:"Low (34)", recruitVal:34, reasoning:"Candidate is a 6.8-year Senior Nlp Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include vector, milvus, elasticsearch, nlp. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 4). FutureFit signals: career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: vector, milvus. Low recruitability score of 34/100; candidate may be passive." },
+        { rank:65, id:"CAND_0091534", score:61.20, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 16.6-year Ai Engineer demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, qdrant, transformers. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (66/100). Concerns: Unverified skills: qdrant. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:66, id:"CAND_0030468", score:61.02, recruit:"High (78)", recruitVal:78, reasoning:"Candidate is a 5.4-year Senior Applied Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, ranking, milvus, opensearch. Key strengths include ranking and search systems optimization (hits: 1), production ML experience (hits: 4), evaluation frameworks experience (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (45/100), career progression to senior roles. Concerns: Unverified skills: retrieval, milvus. Moderate recruitability score of 78/100; check responsiveness." },
+        { rank:67, id:"CAND_0041610", score:60.98, recruit:"High (75)", recruitVal:75, reasoning:"Candidate is a 6.7-year Recommendation Systems Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, opensearch, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (52/100). Concerns: Unverified skills: vector, opensearch. Moderate recruitability score of 75/100; check responsiveness." },
+        { rank:68, id:"CAND_0015528", score:60.77, recruit:"Mod (64)", recruitVal:64, reasoning:"Candidate is a 7.4-year Applied Ml Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, faiss, weaviate. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (51/100). Concerns: Unverified skills: retrieval, vector. Moderate recruitability score of 64/100; check responsiveness." },
+        { rank:69, id:"CAND_0030348", score:60.61, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 4.5-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, elasticsearch, python. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: vector, python. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:70, id:"CAND_0052682", score:60.48, recruit:"High (78)", recruitVal:78, reasoning:"Candidate is a 6.6-year Nlp Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, faiss, python, search. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (72/100). Concerns: Unverified skills: faiss, python. Moderate recruitability score of 78/100; check responsiveness." },
+        { rank:71, id:"CAND_0005538", score:60.48, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 5.9-year Senior Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, python, nlp. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (58/100), career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: retrieval, vector. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:72, id:"CAND_0040887", score:60.39, recruit:"High (84)", recruitVal:84, reasoning:"Candidate is a 4.7-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include faiss, milvus, python, machine learning. Key strengths include retrieval & embeddings experience (hits: 5), vector database scale (hits: 3), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: milvus, python. Highly active and reachable (Recruitability: 84/100)." },
+        { rank:73, id:"CAND_0093331", score:60.32, recruit:"Mod (70)", recruitVal:70, reasoning:"Candidate is a 16.1-year Nlp Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, milvus, machine learning, pytorch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (74/100). Concerns: Unverified skills: embeddings, milvus. Moderate recruitability score of 70/100; check responsiveness." },
+        { rank:74, id:"CAND_0049896", score:60.27, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.3-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, sentence-transformers, nlp. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). Standard learning and progression trajectory. Concerns: Notice period of 90 days; unverified skills: retrieval, vector. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:75, id:"CAND_0013613", score:60.19, recruit:"Mod (71)", recruitVal:71, reasoning:"Candidate is a 4.7-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, weaviate, machine learning, transformers. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 4). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (67/100). Concerns: Unverified skills: weaviate. Moderate recruitability score of 71/100; check responsiveness." },
+        { rank:76, id:"CAND_0037944", score:60.17, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 4.9-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, sentence-transformers, opensearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (83/100), career progression to senior roles. Concerns: Unverified skills: vector, sentence-transformers. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:77, id:"CAND_0037980", score:60.03, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 9.0-year Senior Applied Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, nlp, search. Key strengths include ranking and search systems optimization (hits: 1), production ML experience (hits: 3), evaluation frameworks experience (hits: 3). FutureFit signals: career progression to senior roles. Concerns: Unverified skills: retrieval, vector. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:78, id:"CAND_0041568", score:59.87, recruit:"Mod (64)", recruitVal:64, reasoning:"Candidate is a 5.2-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, pinecone. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). Standard learning and progression trajectory. Concerns: Notice period of 90 days; unverified skills: vector, qdrant. Moderate recruitability score of 64/100; check responsiveness." },
+        { rank:79, id:"CAND_0001610", score:59.71, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 3.0-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, sentence-transformers, faiss, milvus. Key strengths include retrieval & embeddings experience (hits: 4), vector database scale (hits: 2), ranking and search systems optimization (hits: 4). FutureFit signals: shows leadership trajectory. Concerns: Notice period of 90 days; unverified skills: milvus, pinecone. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:80, id:"CAND_0078002", score:59.48, recruit:"High (76)", recruitVal:76, reasoning:"Candidate is a 6.3-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, weaviate, nlp, machine learning. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 3), production ML experience (hits: 2). FutureFit signals: strong GitHub activity signal (51/100). Concerns: Unverified skills: vector, weaviate. Moderate recruitability score of 76/100; check responsiveness." },
+        { rank:81, id:"CAND_0067866", score:59.47, recruit:"High (85)", recruitVal:85, reasoning:"Candidate is a 6.4-year Senior Software Engineer (Ml) demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, qdrant, elasticsearch. Key strengths include ranking and search systems optimization (hits: 2), production ML experience (hits: 3), startup/product signals. FutureFit signals: shows leadership trajectory, career progression to senior roles. Concerns: Unverified skills: embeddings, vector. Highly active and reachable (Recruitability: 85/100)." },
+        { rank:82, id:"CAND_0096142", score:59.45, recruit:"High (76)", recruitVal:76, reasoning:"Candidate is a 5.0-year Applied Ml Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include weaviate, pinecone, python, nlp. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 3), production ML experience (hits: 2). FutureFit signals: strong GitHub activity signal (80/100). Concerns: Long notice period of 120 days; unverified skills: weaviate, pinecone. Moderate recruitability score of 76/100; check responsiveness." },
+        { rank:83, id:"CAND_0070398", score:59.17, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.2-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, faiss. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (63/100). Concerns: Long notice period of 120 days; unverified skills: embeddings, vector. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:84, id:"CAND_0094056", score:59.06, recruit:"Mod (65)", recruitVal:65, reasoning:"Candidate is a 5.9-year Nlp Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, sentence-transformers, milvus, pinecone. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 1). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (65/100). Concerns: Long notice period of 120 days; unverified skills: embeddings, milvus. Moderate recruitability score of 65/100; check responsiveness." },
+        { rank:85, id:"CAND_0075574", score:58.95, recruit:"Mod (73)", recruitVal:73, reasoning:"Candidate is a 5.7-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). Standard learning and progression trajectory. Concerns: Unverified skills: vector, qdrant. Moderate recruitability score of 73/100; check responsiveness." },
+        { rank:86, id:"CAND_0081053", score:58.71, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 5.4-year Nlp Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, qdrant, weaviate, opensearch. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (78/100). Concerns: Notice period of 90 days; unverified skills: vector, qdrant. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:87, id:"CAND_0075439", score:58.56, recruit:"Mod (68)", recruitVal:68, reasoning:"Candidate is a 4.3-year Machine Learning Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, vector, opensearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (66/100). Concerns: Unverified skills: retrieval, vector. Moderate recruitability score of 68/100; check responsiveness." },
+        { rank:88, id:"CAND_0065878", score:58.48, recruit:"Mod (69)", recruitVal:69, reasoning:"Candidate is a 7.8-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, search, machine learning, llm. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 2). FutureFit signals: career progression to senior roles. Concerns: Unverified skills: vector. Moderate recruitability score of 69/100; check responsiveness." },
+        { rank:89, id:"CAND_0030827", score:58.41, recruit:"Mod (63)", recruitVal:63, reasoning:"Candidate is a 5.4-year Senior Data Scientist demonstrating strong alignment with the Senior AI Engineer role. Proven skills include sentence-transformers, faiss, qdrant, nlp. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (52/100), career progression to senior roles. Concerns: Long notice period of 120 days; unverified skills: qdrant, nlp. Moderate recruitability score of 63/100; check responsiveness." },
+        { rank:90, id:"CAND_0042029", score:58.16, recruit:"Mod (67)", recruitVal:67, reasoning:"Candidate is a 6.5-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, weaviate, opensearch, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (79/100), career progression to senior roles. Concerns: Unverified skills: weaviate, opensearch. Moderate recruitability score of 67/100; check responsiveness." },
+        { rank:91, id:"CAND_0011162", score:57.80, recruit:"Mod (72)", recruitVal:72, reasoning:"Candidate is a 5.8-year Recommendation Systems Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, vector, sentence-transformers, faiss. Key strengths include ranking and search systems optimization (hits: 2), production ML experience (hits: 3), evaluation frameworks experience (hits: 1). FutureFit signals: shows leadership trajectory. Concerns: Notice period of 90 days; unverified skills: embeddings, vector. Moderate recruitability score of 72/100; check responsiveness." },
+        { rank:92, id:"CAND_0050454", score:57.70, recruit:"Mod (73)", recruitVal:73, reasoning:"Candidate is a 6.8-year Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include faiss, qdrant, nlp, pytorch. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: qdrant, nlp. Moderate recruitability score of 73/100; check responsiveness." },
+        { rank:93, id:"CAND_0074225", score:57.52, recruit:"High (80)", recruitVal:80, reasoning:"Candidate is a 4.3-year Machine Learning Engineer demonstrating poor alignment with the Senior AI Engineer role. Proven skills include vector, milvus, qdrant, elasticsearch. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (54/100). Concerns: Long notice period of 120 days; unverified skills: vector, milvus. Highly active and reachable (Recruitability: 80/100)." },
+        { rank:94, id:"CAND_0058688", score:57.50, recruit:"High (77)", recruitVal:77, reasoning:"Candidate is a 6.7-year Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, retrieval, milvus, search. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 4). FutureFit signals: shows leadership trajectory. Concerns: Unverified skills: retrieval, milvus. Moderate recruitability score of 77/100; check responsiveness." },
+        { rank:95, id:"CAND_0042506", score:57.43, recruit:"High (81)", recruitVal:81, reasoning:"Candidate is a 4.2-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, vector, faiss, milvus. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (64/100). Concerns: Unverified skills: retrieval, vector. Highly active and reachable (Recruitability: 81/100)." },
+        { rank:96, id:"CAND_0053591", score:57.13, recruit:"Mod (74)", recruitVal:74, reasoning:"Candidate is a 5.3-year Ai Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include embeddings, sentence-transformers, milvus, qdrant. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (76/100). Concerns: Unverified skills: sentence-transformers, milvus. Moderate recruitability score of 74/100; check responsiveness." },
+        { rank:97, id:"CAND_0081852", score:56.65, recruit:"High (86)", recruitVal:86, reasoning:"Candidate is a 5.9-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include vector, milvus, weaviate, search. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), production ML experience (hits: 3). FutureFit signals: shows leadership trajectory, strong GitHub activity signal (88/100), career progression to senior roles. Concerns: Unverified skills: vector, milvus. Highly active and reachable (Recruitability: 86/100)." },
+        { rank:98, id:"CAND_0047721", score:56.52, recruit:"Mod (66)", recruitVal:66, reasoning:"Candidate is a 7.0-year Senior Data Scientist demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, faiss, milvus, qdrant. Key strengths include retrieval & embeddings experience (hits: 1), ranking and search systems optimization (hits: 2), production ML experience (hits: 2). FutureFit signals: strong GitHub activity signal (90/100), career progression to senior roles. Concerns: Notice period of 90 days; unverified skills: retrieval, faiss. Moderate recruitability score of 66/100; check responsiveness." },
+        { rank:99, id:"CAND_0064326", score:56.33, recruit:"High (83)", recruitVal:83, reasoning:"Candidate is a 7.6-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include milvus, weaviate, python, search. Key strengths include retrieval & embeddings experience (hits: 2), vector database scale (hits: 1), ranking and search systems optimization (hits: 2). FutureFit signals: strong GitHub activity signal (61/100). Concerns: Unverified skills: milvus, weaviate. Highly active and reachable (Recruitability: 83/100)." },
+        { rank:100, id:"CAND_0070485", score:55.73, recruit:"Mod (59)", recruitVal:59, reasoning:"Candidate is a 6.4-year Search Engineer demonstrating partial alignment with the Senior AI Engineer role. Proven skills include retrieval, faiss, lora, qlora. Key strengths include retrieval & embeddings experience (hits: 3), vector database scale (hits: 2), ranking and search systems optimization (hits: 2). FutureFit signals: shows leadership trajectory. Concerns: Long notice period of 120 days. Moderate recruitability score of 59/100; check responsiveness." },
+    ];
+
+    let currentFilter = 'all';
+    const maxScore = candidates[0].score;
+
+    function getRankBadge(r) {
+        if (r === 1) return `<span class="rank-badge gold">#1</span>`;
+        if (r === 2) return `<span class="rank-badge silver">#2</span>`;
+        if (r === 3) return `<span class="rank-badge bronze">#3</span>`;
+        return `<span class="rank-badge default">#${r}</span>`;
+    }
+
+    function getRecruitBadge(val, label) {
+        let cls = val >= 72 ? 'high' : val >= 55 ? 'mid' : 'low';
+        let dot = val >= 72 ? '🟢' : val >= 55 ? '🟡' : '🔴';
+        return `<span class="recruit-badge ${cls}">${dot} ${label}</span>`;
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('results-tbody');
+        tbody.innerHTML = '';
+        document.getElementById('showing-count').textContent = data.length;
+
+        data.forEach(c => {
+            const pct = ((c.score / maxScore) * 100).toFixed(1);
+            const isTop3 = c.rank <= 3;
+
+            const tr = document.createElement('tr');
+            if (isTop3) tr.classList.add('top3');
+            tr.dataset.rank = c.rank;
+            tr.innerHTML = `
+                <td>${getRankBadge(c.rank)}</td>
+                <td><span class="cand-id">${c.id}</span></td>
+                <td>
+                    <div class="score-bar-cell">
+                        <span class="score-val">${c.score.toFixed(2)}</span>
+                        <div class="mini-bar">
+                            <div class="mini-bar-fill" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td>${getRecruitBadge(c.recruitVal, c.recruit)}</td>
+                <td><div class="reasoning-text">${c.reasoning}</div></td>
+            `;
+            tr.addEventListener('click', () => toggleExpand(c, tr));
+            tbody.appendChild(tr);
+        });
+    }
+
+    function toggleExpand(c, row) {
+        const existing = row.nextElementSibling;
+        if (existing && existing.classList.contains('expanded-row')) {
+            existing.remove();
+            return;
+        }
+        // Remove any other expanded rows
+        document.querySelectorAll('.expanded-row').forEach(r => r.remove());
+
+        const exRow = document.createElement('tr');
+        exRow.classList.add('expanded-row');
+        exRow.style.display = 'table-row';
+        exRow.innerHTML = `<td colspan="5">
+            <div class="expanded-content">
+                <div class="exp-stat">
+                    <span class="exp-stat-label">Final Score</span>
+                    <span class="exp-stat-val" style="color:var(--cyan)">${c.score.toFixed(4)}</span>
+                </div>
+                <div class="exp-stat">
+                    <span class="exp-stat-label">Recruitability</span>
+                    <span class="exp-stat-val" style="color:var(--green)">${c.recruit}</span>
+                </div>
+                <div class="exp-stat">
+                    <span class="exp-stat-label">Global Rank</span>
+                    <span class="exp-stat-val" style="color:var(--purple)">#${c.rank} / 100,000</span>
+                </div>
+                <div class="exp-stat">
+                    <span class="exp-stat-label">Full Reasoning</span>
+                    <span class="exp-stat-val" style="font-size:0.72rem;font-family:var(--font);color:var(--text-muted);font-weight:400">${c.reasoning}</span>
+                </div>
+            </div>
+        </td>`;
+        row.after(exRow);
+    }
+
+    function filterTable(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = type;
+
+        let filtered;
+        if (type === 'top10') filtered = candidates.filter(c => c.rank <= 10);
+        else if (type === 'top25') filtered = candidates.filter(c => c.rank <= 25);
+        else if (type === 'high-recruit') filtered = candidates.filter(c => c.recruitVal >= 72);
+        else filtered = candidates;
+
+        renderTable(filtered);
+    }
+
+    // Initial render
+    renderTable(candidates);
+
+    // Animate progress bars
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.querySelectorAll('.progress-bar-fill').forEach(el => {
+                const target = el.dataset.target;
+                if (target) el.style.width = target + '%';
+            });
+        }, 300);
+    });
+</script>
+</body>
+</html>

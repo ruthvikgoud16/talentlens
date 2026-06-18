@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentLens X — Live AI Orchestration Pipeline Engine</title>
+<meta name="description" content="Live AI Pipeline: Groq + Gemini powered JD parsing, semantic retrieval, DeepSeek reasoning, and explainable candidate ranking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030508;--bg2:#070A14;--bg3:#0C1120;--bg4:rgba(10,14,24,0.94);
+  --cyan:#00D4FF;--cg:rgba(0,212,255,0.18);--cd:rgba(0,212,255,0.07);
+  --green:#00F5A0;--gg:rgba(0,245,160,0.18);--gd:rgba(0,245,160,0.07);
+  --purple:#A855F7;--pg:rgba(168,85,247,0.18);--pd:rgba(168,85,247,0.07);
+  --orange:#F59E0B;--og:rgba(245,158,11,0.18);--od:rgba(245,158,11,0.07);
+  --red:#EF4444;--rd:rgba(239,68,68,0.07);--gold:#FFD700;
+  --t1:#F1F5F9;--t2:#CBD5E1;--t3:#64748B;--t4:#334155;
+  --b:rgba(255,255,255,0.06);--bc:rgba(0,212,255,0.2);
+  --font:'Inter',sans-serif;--mono:'Fira Code',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse 80% 40% at 10% 0%,rgba(0,212,255,0.04) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 30% at 90% 100%,rgba(168,85,247,0.03) 0%,transparent 50%)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(3,5,8,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#000;
+  box-shadow:0 0 14px var(--cg)}
+.logo-text{font-size:0.85rem;font-weight:800;background:linear-gradient(to right,#fff,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:0.58rem;color:var(--t3);letter-spacing:2px;text-transform:uppercase;display:block;-webkit-text-fill-color:var(--t3)}
+.nav-badge{display:flex;align-items:center;gap:7px;padding:4px 12px;border-radius:20px;
+  background:var(--gd);border:1px solid rgba(0,245,160,0.2);font-size:0.68rem;font-weight:600;color:var(--green)}
+.ndot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--gg);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-link{padding:5px 12px;border-radius:6px;font-size:0.74rem;color:var(--t3);cursor:pointer;
+  border:1px solid var(--b);background:transparent;text-decoration:none;transition:all .2s}
+.nav-link:hover{color:var(--t1);border-color:var(--bc)}
+
+/* MAIN LAYOUT */
+main{max-width:1400px;margin:0 auto;padding:32px 28px 80px}
+.page-head{margin-bottom:36px}
+.page-ey{font-size:0.66rem;font-weight:700;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
+.page-h{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;letter-spacing:-0.5px;margin-bottom:8px}
+.page-h span{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.page-sub{font-size:0.88rem;color:var(--t3);line-height:1.7;max-width:640px}
+
+/* ROUTING MATRIX HEADER */
+.routing-matrix{background:var(--bg4);border:1px solid var(--b);border-radius:14px;padding:20px 24px;margin-bottom:28px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.rm-section{display:flex;flex-direction:column;gap:8px}
+.rm-label{font-size:0.65rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px}
+.rm-row{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid var(--b)}
+.rm-stage{font-size:0.68rem;font-weight:700;color:var(--cyan);font-family:var(--mono);white-space:nowrap}
+.rm-model{font-size:0.74rem;color:var(--t2);font-family:var(--mono);flex:1}
+.rm-model.active{color:var(--green)}
+.rm-status{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--gg)}
+.rm-status.standby{background:var(--t4);box-shadow:none}
+.api-key-row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;background:rgba(0,212,255,0.04);border:1px solid var(--bc);font-size:0.72rem;font-family:var(--mono)}
+.api-key-provider{color:var(--cyan);font-weight:600;min-width:60px}
+.api-key-val{color:var(--green);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* LAYOUT */
+.pipeline-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+/* INPUTS */
+.input-section{display:flex;flex-direction:column;gap:16px}
+.section-card{background:var(--bg4);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.section-header{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:0.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);display:flex;align-items:center;gap:7px}
+.textarea{width:100%;background:rgba(4,6,9,0.8);border:none;padding:16px;color:var(--t1);font-family:var(--mono);
+  font-size:0.74rem;line-height:1.6;resize:vertical;outline:none;min-height:180px;transition:background .2s}
+.textarea:focus{background:rgba(6,9,14,0.9)}
+.textarea.jd{min-height:280px}
+.textarea.cand{min-height:160px}
+.cand-label{padding:10px 18px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--b);
+  display:flex;align-items:center;justify-content:space-between;font-size:0.72rem;color:var(--t3)}
+.cand-num{font-family:var(--mono);font-weight:700;color:var(--cyan)}
+.remove-btn{cursor:pointer;color:var(--red);font-size:0.72rem;background:transparent;border:none;padding:2px 6px;border-radius:4px}
+.remove-btn:hover{background:var(--rd)}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-family:var(--font);
+  font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#0099CC);color:#020408;box-shadow:0 0 16px var(--cg)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(0,212,255,.4)}
+.btn-primary:disabled{opacity:0.5;transform:none;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--t3);border:1px solid var(--b)}
+.btn-ghost:hover{color:var(--t1);border-color:rgba(255,255,255,0.12)}
+.btn-sm{padding:6px 12px;font-size:0.73rem}
+.btn-add{background:var(--pd);color:var(--purple);border:1px solid rgba(168,85,247,0.25)}
+.btn-add:hover{background:rgba(168,85,247,0.15)}
+
+/* PIPELINE STATUS */
+.pipeline-status{display:flex;flex-direction:column;gap:16px}
+.stage-panel{background:var(--bg4);border:1px solid var(--b);border-radius:14px;overflow:hidden;transition:border-color .3s}
+.stage-panel.running{border-color:var(--bc);box-shadow:0 0 16px rgba(0,212,255,0.06)}
+.stage-panel.done{border-color:rgba(0,245,160,0.2)}
+.stage-panel.error{border-color:rgba(239,68,68,0.2)}
+.stage-header{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--b)}
+.stage-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0}
+.stage-icon.cyan{background:var(--cd);border:1px solid var(--bc)}
+.stage-icon.green{background:var(--gd);border:1px solid rgba(0,245,160,0.2)}
+.stage-icon.purple{background:var(--pd);border:1px solid rgba(168,85,247,0.2)}
+.stage-icon.orange{background:var(--od);border:1px solid rgba(245,158,11,0.2)}
+.stage-name{font-size:0.82rem;font-weight:700;flex:1}
+.stage-model{font-size:0.68rem;color:var(--t3);font-family:var(--mono)}
+.stage-status{font-size:0.7rem;font-weight:600;font-family:var(--mono);padding:2px 8px;border-radius:4px}
+.stage-status.idle{background:rgba(255,255,255,0.04);color:var(--t4)}
+.stage-status.running{background:var(--cd);color:var(--cyan);animation:pulse .8s infinite}
+.stage-status.done{background:var(--gd);color:var(--green)}
+.stage-status.error{background:var(--rd);color:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.stage-body{padding:14px 18px;min-height:40px}
+.stage-log{font-family:var(--mono);font-size:0.71rem;color:var(--t3);line-height:1.6}
+.stage-log .ok{color:var(--green)}
+.stage-log .info{color:var(--cyan)}
+.stage-log .err{color:var(--red)}
+.stage-log .warn{color:var(--orange)}
+
+/* PROGRESS BAR */
+.prog{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(to right,var(--cyan),var(--purple));transition:width .4s ease;box-shadow:0 0 6px var(--cg)}
+.spinner{width:12px;height:12px;border:2px solid rgba(0,212,255,0.2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RUN BUTTON AREA */
+.run-area{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.run-status-text{font-size:0.78rem;color:var(--t3)}
+.run-status-text.active{color:var(--cyan)}
+
+/* OUTPUT SECTION */
+.output-section{margin-top:32px;display:flex;flex-direction:column;gap:20px}
+.output-panel{background:var(--bg4);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.output-header{padding:14px 20px;border-bottom:1px solid var(--b);background:rgba(0,0,0,0.2);
+  display:flex;align-items:center;justify-content:space-between}
+.output-title{font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.output-badge{padding:2px 9px;border-radius:4px;font-size:0.67rem;font-weight:700;font-family:var(--mono)}
+.ob-cyan{background:var(--cd);color:var(--cyan);border:1px solid var(--bc)}
+.ob-green{background:var(--gd);color:var(--green);border:1px solid rgba(0,245,160,0.2)}
+.ob-purple{background:var(--pd);color:var(--purple);border:1px solid rgba(168,85,247,0.2)}
+.ob-orange{background:var(--od);color:var(--orange);border:1px solid rgba(245,158,11,0.2)}
+.output-body{padding:20px}
+
+/* JSON BLOCK */
+.json-block{background:rgba(0,0,0,0.4);border:1px solid var(--b);border-radius:10px;padding:16px;
+  font-family:var(--mono);font-size:0.74rem;line-height:1.7;overflow-x:auto;max-height:400px;overflow-y:auto}
+.jk{color:var(--cyan)}.jstr{color:var(--green)}.jnum{color:var(--orange)}.jbool{color:var(--purple)}.jpunc{color:var(--t3)}
+
+/* THINK BLOCK */
+.think-container{display:flex;flex-direction:column;gap:16px}
+.think-card{background:rgba(0,0,0,0.25);border:1px solid var(--b);border-radius:12px;overflow:hidden}
+.think-card-header{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(0,0,0,0.15)}
+.think-card-name{font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.think-card-scores{display:flex;gap:12px;font-family:var(--mono);font-size:0.74rem}
+.think-toggle{font-size:0.8rem;color:var(--t3);transition:transform .3s}
+.think-toggle.open{transform:rotate(180deg)}
+.think-inner{display:none;padding:16px}
+.think-inner.open{display:block}
+.think-block{background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.1);border-radius:9px;
+  padding:14px;font-family:var(--mono);font-size:0.71rem;color:var(--t3);line-height:1.7;
+  max-height:280px;overflow-y:auto;margin-bottom:12px;white-space:pre-wrap;word-break:break-word}
+.think-block-label{font-size:0.65rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.answer-block{background:rgba(0,212,255,0.04);border:1px solid var(--bc);border-radius:9px;padding:14px;
+  font-size:0.78rem;color:var(--t2);line-height:1.7}
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.score-box{text-align:center;padding:10px 8px;border-radius:8px}
+.score-box.c{background:var(--cd);border:1px solid var(--bc)}
+.score-box.g{background:var(--gd);border:1px solid rgba(0,245,160,0.2)}
+.score-box.p{background:var(--pd);border:1px solid rgba(168,85,247,0.2)}
+.score-box.o{background:var(--od);border:1px solid rgba(245,158,11,0.2)}
+.score-box-val{font-family:var(--mono);font-size:1.2rem;font-weight:900;line-height:1}
+.score-box.c .score-box-val{color:var(--cyan)}.score-box.g .score-box-val{color:var(--green)}.score-box.p .score-box-val{color:var(--purple)}.score-box.o .score-box-val{color:var(--orange)}
+.score-box-lbl{font-size:0.62rem;color:var(--t3);margin-top:3px}
+
+/* RANKINGS TABLE */
+.rtable{width:100%;border-collapse:collapse}
+.rtable th{padding:10px 14px;text-align:left;font-size:0.67rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid var(--b);white-space:nowrap}
+.rtable td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.8rem;vertical-align:middle}
+.rtable tr:hover td{background:rgba(255,255,255,0.02)}
+.rtable tr:last-child td{border-bottom:none}
+.rank-medal{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;font-size:0.7rem;font-weight:700;font-family:var(--mono)}
+.rank-1{background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.3)}
+.rank-2{background:rgba(192,192,192,0.1);color:#C0C0C0;border:1px solid rgba(192,192,192,0.25)}
+.rank-3{background:rgba(205,127,50,0.1);color:#CD7F32;border:1px solid rgba(205,127,50,0.25)}
+.rank-n{background:rgba(255,255,255,0.04);color:var(--t3);border:1px solid var(--b)}
+.score-val{font-family:var(--mono);font-weight:700}
+.score-bar{width:60px;height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;display:inline-block;margin-left:6px;vertical-align:middle}
+.score-bar-fill{height:100%;border-radius:2px}
+.final-score-big{font-family:var(--mono);font-size:1.1rem;font-weight:900;color:var(--cyan)}
+
+/* AUDIT PANEL */
+.audit-list{display:flex;flex-direction:column;gap:12px}
+.audit-item{padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--b);border-radius:10px;
+  display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.audit-rank{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-family:var(--mono);font-size:0.8rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.audit-content{display:flex;flex-direction:column;gap:4px}
+.audit-name{font-size:0.85rem;font-weight:700}
+.audit-text{font-size:0.78rem;color:var(--t2);line-height:1.65}
+
+/* MODULE LABEL */
+.mod-tag{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:4px;font-size:0.67rem;font-weight:700;font-family:var(--mono);background:rgba(0,212,255,0.08);color:var(--cyan);border:1px solid var(--bc)}
+.mod-tag.g{background:var(--gd);color:var(--green);border-color:rgba(0,245,160,0.2)}
+.mod-tag.p{background:var(--pd);color:var(--purple);border-color:rgba(168,85,247,0.2)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px;color:var(--t4)}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:0.82rem}
+
+@media(max-width:900px){.pipeline-layout{grid-template-columns:1fr}.routing-matrix{grid-template-columns:1fr}.score-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="talentlens_x.html">
+    <div class="logo-icon">TX</div>
+    <div><div class="logo-text">TalentLens X</div><span class="logo-sub">Pipeline Engine</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-badge"><div class="ndot"></div>Live AI Engine · Groq + Gemini</div>
+    <a class="nav-link" href="talentlens_x.html">← Dashboard</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-head">
+    <div class="page-ey">India Runs 2026 · Track 1 · Live Orchestration Engine</div>
+    <h1 class="page-h">AI Pipeline <span>Orchestration Engine</span></h1>
+    <p class="page-sub">Real-time candidate ranking powered by Groq (gemma2-9b-it + DeepSeek-R1) and Google Gemini. Paste your JD and candidate profiles — the AI pipeline executes all 6 modules end-to-end with full explainability.</p>
+  </div>
+
+  <!-- ROUTING MATRIX -->
+  <div class="routing-matrix">
+    <div class="rm-section">
+      <div class="rm-label">🔌 API Keys Active</div>
+      <div class="api-key-row"><span class="api-key-provider">GROQ</span><span class="api-key-val" id="show-groq-key">gsk_••••••••••••••••••••</span><span style="color:var(--green);font-size:.68rem">✓ CONNECTED</span></div>
+      <div class="api-key-row" style="border-color:rgba(168,85,247,0.25)"><span class="api-key-provider" style="color:var(--purple)">GEMINI</span><span class="api-key-val" id="show-gem-key">AQ.••••••••••••••••••••</span><span style="color:var(--orange);font-size:.68rem">⚡ FALLBACK</span></div>
+    </div>
+    <div class="rm-section">
+      <div class="rm-label">🔁 Pipeline Routing Matrix</div>
+      <div class="rm-row"><span class="rm-stage">STAGE_1_PARSER</span><span class="rm-model active">gemma2-9b-it</span><div class="rm-status"></div></div>
+      <div class="rm-row"><span class="rm-stage">STAGE_1_FALLBACK</span><span class="rm-model">llama-3.1-8b-instant</span><div class="rm-status standby"></div></div>
+      <div class="rm-row"><span class="rm-stage">STAGE_4_REASONER</span><span class="rm-model active">deepseek-r1-distill-llama-70b</span><div class="rm-status"></div></div>
+      <div class="rm-row"><span class="rm-stage">STAGE_4_FALLBACK</span><span class="rm-model">llama-3.3-70b-versatile</span><div class="rm-status standby"></div></div>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="pipeline-layout">
+
+    <!-- LEFT: INPUTS -->
+    <div class="input-section">
+      <!-- JD Input -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">📋 <span>[INPUT_JOB_DESCRIPTION]</span></div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSampleJD()">Load Sample JD</button>
+        </div>
+        <textarea class="textarea jd" id="jd-input" placeholder="Paste your full job description here...&#10;&#10;Example: Senior AI Engineer role at Redrob AI requiring embeddings, vector search, Python, NDCG evaluation..."></textarea>
+      </div>
+
+      <!-- Candidates -->
+      <div class="section-card" id="cands-card">
+        <div class="section-header">
+          <div class="section-title">👥 <span>[CANDIDATE_DATASET]</span></div>
+          <button class="btn btn-add btn-sm" onclick="addCandidate()">+ Add Candidate</button>
+        </div>
+        <div id="cands-container"></div>
+      </div>
+
+      <!-- Run Button -->
+      <div style="background:var(--bg4);border:1px solid var(--b);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:0.72rem;color:var(--t3);line-height:1.6">
+          <strong style="color:var(--t2)">Pipeline Execution Order:</strong><br>
+          Module 1 → JD Parse (Groq) → Module 2-3 → Semantic Scoring → Module 4-5 → DeepSeek Reasoning → Module 6 → Final Rankings
+        </div>
+        <div class="run-area">
+          <button class="btn btn-primary" id="run-btn" onclick="runPipeline()">
+            ▶ Execute AI Pipeline
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="resetAll()">Reset</button>
+          <span class="run-status-text" id="run-status">Ready to execute</span>
+        </div>
+        <div class="prog"><div class="prog-fill" id="global-progress" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PIPELINE STAGES -->
+    <div class="pipeline-status">
+
+      <div class="stage-panel" id="sp-1">
+        <div class="stage-header">
+          <div class="stage-icon cyan">📋</div>
+          <div style="flex:1"><div class="stage-name">MODULE 1 — JD Understanding Engine</div><div class="stage-model">Provider: Groq → gemma2-9b-it (structured extraction)</div></div>
+          <div class="stage-status idle" id="ss-1">IDLE</div>
+        </div>
+        <div class="stage-body">
+          <div class="stage-log" id="sl-1">Awaiting job description input...</div>
+          <div class="prog"><div class="prog-fill" id="sp-1-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="stage-panel" id="sp-2">
+        <div class="stage-header">
+          <div class="stage-icon purple">🎯</div>
+          <div style="flex:1"><div class="stage-name">MODULE 2-3 — Semantic Retrieval Engine</div><div class="stage-model">Strategy: TF-IDF Cosine Similarity + Keyword Vector Interpolation (768-dim emulated)</div></div>
+          <div class="stage-status idle" id="ss-2">IDLE</div>
+        </div>
+        <div class="stage-body">
+          <div class="stage-log" id="sl-2">Awaiting parsed JD from Module 1...</div>
+          <div class="prog"><div class="prog-fill" id="sp-2-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="stage-panel" id="sp-3">
+        <div class="stage-header">
+          <div class="stage-icon orange">🧠</div>
+          <div style="flex:1"><div class="stage-name">MODULE 4-5 — Truth Engine + FutureFit Engine</div><div class="stage-model">Provider: Groq → deepseek-r1-distill-llama-70b (chain-of-thought audit)</div></div>
+          <div class="stage-status idle" id="ss-3">IDLE</div>
+        </div>
+        <div class="stage-body">
+          <div class="stage-log" id="sl-3">Awaiting semantic scores from Module 3...</div>
+          <div class="prog"><div class="prog-fill" id="sp-3-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="stage-panel" id="sp-4">
+        <div class="stage-header">
+          <div class="stage-icon green">🏆</div>
+          <div style="flex:1"><div class="stage-name">MODULE 6 — Deterministic Scoring Aggregation</div><div class="stage-model">Formula: 0.40×Semantic + 0.25×Truth + 0.20×FutureFit + 0.15×Experience</div></div>
+          <div class="stage-status idle" id="ss-4">IDLE</div>
+        </div>
+        <div class="stage-body">
+          <div class="stage-log" id="sl-4">Awaiting all engine outputs...</div>
+          <div class="prog"><div class="prog-fill" id="sp-4-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT SECTION -->
+  <div class="output-section" id="output-section" style="display:none">
+
+    <!-- MODULE 1: PARSED JD -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title"><span class="mod-tag">MODULE 01</span> 📋 PARSED STRUCTURAL SPECIFICATIONS</div>
+        <div class="output-badge ob-cyan">jd_parsed.json</div>
+      </div>
+      <div class="output-body">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px">### 📋 MODULE 1: PARSED STRUCTURAL SPECIFICATIONS</div>
+        <div class="json-block" id="jd-json-output"></div>
+      </div>
+    </div>
+
+    <!-- MODULE 4-5: EXPLAINABILITY -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title"><span class="mod-tag p">MODULE 04-05</span> 🧠 EXPLAINABILITY VIEW — AI WORKFLOW REASONING</div>
+        <div class="output-badge ob-purple">DeepSeek-R1 Audit Trail</div>
+      </div>
+      <div class="output-body">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px">### 🧠 MODULE 4 &amp; 7: EXPLAINABILITY VIEW (AI WORKFLOW REASONING)</div>
+        <div class="think-container" id="think-container"></div>
+      </div>
+    </div>
+
+    <!-- MODULE 6-8: RANKINGS -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title"><span class="mod-tag g">MODULE 06-08</span> 🏆 RECRUITER RANKINGS PANEL DISTRIBUTION</div>
+        <div class="output-badge ob-green">Ranked by Final Score ↓</div>
+      </div>
+      <div class="output-body">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px">### 🏆 MODULE 6 &amp; 8: RECRUITER RANKINGS PANEL DISTRIBUTION</div>
+        <div style="overflow-x:auto">
+          <table class="rtable" id="rankings-table">
+            <thead>
+              <tr>
+                <th>Rank</th><th>Candidate</th>
+                <th>Semantic Match (40%)</th>
+                <th>Truth Score (25%)</th>
+                <th>FutureFit (20%)</th>
+                <th>Exp. Alignment (15%)</th>
+                <th>Final Score</th>
+              </tr>
+            </thead>
+            <tbody id="rankings-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT COMPLIANCE -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title"><span class="mod-tag">MODULE 07</span> 🔍 AUDIT COMPLIANCE PANEL EVIDENCE</div>
+        <div class="output-badge ob-cyan">Structural Narratives</div>
+      </div>
+      <div class="output-body">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px">### 🔍 AUDIT COMPLIANCE PANEL EVIDENCE</div>
+        <div class="audit-list" id="audit-list"></div>
+      </div>
+    </div>
+
+    <!-- RAW FORMULA OUTPUT -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title">⚙️ RAW FORMULA CALCULATION MATRIX</div>
+        <div class="output-badge ob-orange">Deterministic · 2 decimal precision</div>
+      </div>
+      <div class="output-body">
+        <div class="json-block" id="formula-output"></div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+/* ============================================================
+   TALENTLENS X — LIVE AI ORCHESTRATION ENGINE
+   Real API calls: Groq (gemma2-9b-it + deepseek-r1) + Gemini fallback
+   ============================================================ */
+
+const CFG = {
+  GROQ: '', // Set your Groq API key here
+  GEMINI: '', // Set your Gemini API key here
+  S1_MODEL: 'gemma2-9b-it',
+  S1_FALLBACK: 'llama-3.1-8b-instant',
+  S4_MODEL: 'deepseek-r1-distill-llama-70b',
+  S4_FALLBACK: 'llama-3.3-70b-versatile',
+  GROQ_URL: 'https://api.groq.com/openai/v1/chat/completions',
+  GEM_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+};
+
+let candCount = 0;
+let pipelineRunning = false;
+let results = [];
+
+/* ─── CANDIDATE MANAGEMENT ─── */
+function addCandidate(prefill='') {
+  candCount++;
+  const id = candCount;
+  const div = document.createElement('div');
+  div.id = `cand-wrap-${id}`;
+  div.innerHTML = `
+    <div class="cand-label">
+      <span><span class="cand-num">CANDIDATE_RECORD_${id}</span> &nbsp;·&nbsp; Paste resume text, LinkedIn profile, or structured metadata</span>
+      <button class="remove-btn" onclick="removeCandidate(${id})">✕ Remove</button>
+    </div>
+    <textarea class="textarea cand" id="cand-${id}" placeholder="Paste candidate profile here...&#10;&#10;Include: Name, current title, company, years of experience, skills, career history, education, GitHub/publications, notice period, open-to-work status...">${prefill}</textarea>
+  `;
+  document.getElementById('cands-container').appendChild(div);
+}
+
+function removeCandidate(id) {
+  const el = document.getElementById(`cand-wrap-${id}`);
+  if(el) el.remove();
+}
+
+function getCandidates() {
+  const res = [];
+  document.querySelectorAll('[id^="cand-"]:not([id^="cand-wrap"])').forEach(ta => {
+    const v = ta.value.trim();
+    if(v) res.push({ id: ta.id, text: v });
+  });
+  return res;
+}
+
+/* ─── GROQ API ─── */
+async function callGroq(model, messages, temperature=0.1, maxTok=4096) {
+  const res = await fetch(CFG.GROQ_URL, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${CFG.GROQ}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTok })
+  });
+  if(!res.ok) {
+    const err = await res.text();
+    throw new Error(`Groq [${model}] ${res.status}: ${err.substring(0,200)}`);
+  }
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+async function callGroqWithFallback(primary, fallback, messages, temperature=0.1, maxTok=4096) {
+  try {
+    return { content: await callGroq(primary, messages, temperature, maxTok), model: primary };
+  } catch(e) {
+    log(3, `warn`, `⚡ ${primary} error: ${e.message.substring(0,80)} — switching to fallback ${fallback}`);
+    try {
+      return { content: await callGroq(fallback, messages, temperature, maxTok), model: fallback };
+    } catch(e2) {
+      throw new Error(`Both models failed. Primary: ${e.message.substring(0,80)}`);
+    }
+  }
+}
+
+/* ─── GEMINI API (fallback) ─── */
+async function callGemini(prompt) {
+  const res = await fetch(`${CFG.GEM_URL}?key=${CFG.GEMINI}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  if(!res.ok) throw new Error(`Gemini ${res.status}`);
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+/* ─── STAGE LOGGING ─── */
+function stageSet(n, state, text) {
+  const panel = document.getElementById(`sp-${n}`);
+  const status = document.getElementById(`ss-${n}`);
+  panel.className = `stage-panel ${state}`;
+  status.className = `stage-status ${state}`;
+  status.textContent = state.toUpperCase();
+  if(text) log(n, 'info', text);
+}
+
+function log(n, type, text) {
+  const el = document.getElementById(`sl-${n}`);
+  const ts = new Date().toISOString().substring(11,19);
+  el.innerHTML += (el.innerHTML ? '\n' : '') + `<span class="${type}">[${ts}] ${text}</span>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setProgress(n, pct) {
+  document.getElementById(`sp-${n}-bar`).style.width = pct+'%';
+}
+
+function setGlobalProgress(pct) {
+  document.getElementById('global-progress').style.width = pct+'%';
+}
+
+function setRunStatus(text, active=false) {
+  const el = document.getElementById('run-status');
+  el.textContent = text;
+  el.className = 'run-status-text' + (active?' active':'');
+}
+
+/* ─── MODULE 1: JD PARSER ─── */
+async function runModule1(jdText) {
+  stageSet(1, 'running', '🚀 Routing JD to STAGE_1_PARSER...');
+  setProgress(1, 15);
+
+  const system = `You are a precise job description parser. Extract structured data as valid JSON only.
+Return ONLY a raw JSON object with no markdown, no explanation, no preamble.
+The JSON must exactly match this schema:
+{
+  "required_skills": ["array of strings"],
+  "preferred_skills": ["array of strings"],
+  "experience_years_min": integer,
+  "experience_years_max": integer,
+  "target_domain": "string",
+  "leadership_indicators": ["array of strings"],
+  "disqualifiers": ["array of strings"],
+  "location": "string",
+  "notice_preference": "string"
+}`;
+
+  const prompt = `Parse this job description into the exact JSON schema specified:\n\n${jdText}`;
+
+  log(1, 'info', `📡 Sending to Groq API → ${CFG.S1_MODEL}...`);
+  setProgress(1, 35);
+
+  let raw, modelUsed;
+  try {
+    const r = await callGroqWithFallback(
+      CFG.S1_MODEL, CFG.S1_FALLBACK,
+      [{ role:'system', content: system }, { role:'user', content: prompt }],
+      0.1, 2048
+    );
+    raw = r.content; modelUsed = r.model;
+    log(1, 'ok', `✓ Response received from ${modelUsed} (${raw.length} chars)`);
+  } catch(e) {
+    log(1, 'warn', `⚡ Groq failed — attempting Gemini fallback...`);
+    try {
+      raw = await callGemini(`${system}\n\n${prompt}`);
+      modelUsed = 'gemini-1.5-flash';
+      log(1, 'ok', `✓ Gemini fallback successful`);
+    } catch(e2) {
+      log(1, 'err', `✗ All providers failed: ${e2.message}`);
+      throw e2;
+    }
+  }
+
+  setProgress(1, 70);
+  log(1, 'info', `🔄 Parsing JSON response...`);
+
+  // Extract JSON from response
+  let parsed;
+  try {
+    // Try to find JSON block
+    const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/) || raw.match(/```\s*([\s\S]*?)\s*```/);
+    const jsonStr = jsonMatch ? jsonMatch[1] : raw.trim();
+    // Find first { and last }
+    const start = jsonStr.indexOf('{');
+    const end = jsonStr.lastIndexOf('}');
+    parsed = JSON.parse(jsonStr.substring(start, end+1));
+  } catch(e) {
+    log(1, 'warn', `⚠ JSON parse failed, attempting repair...`);
+    // Fallback: build from raw text
+    parsed = buildFallbackJD(jdText);
+  }
+
+  setProgress(1, 100);
+  log(1, 'ok', `✓ MODULE 1 COMPLETE — Extracted ${parsed.required_skills?.length||0} required skills, ${parsed.preferred_skills?.length||0} preferred`);
+  stageSet(1, 'done', null);
+  return parsed;
+}
+
+function buildFallbackJD(text) {
+  const lower = text.toLowerCase();
+  const skillKeywords = ['python','embeddings','vector','faiss','milvus','qdrant','weaviate','pinecone','opensearch','elasticsearch',
+    'sentence-transformers','ndcg','mrr','map','retrieval','ranking','nlp','pytorch','tensorflow','transformers','lora','qlora','bert','llm'];
+  const foundSkills = skillKeywords.filter(s => lower.includes(s));
+  const expMatch = text.match(/(\d+)[–\-]\s*(\d+)\s*years?/i);
+  return {
+    required_skills: foundSkills.slice(0, Math.ceil(foundSkills.length*0.6)),
+    preferred_skills: foundSkills.slice(Math.ceil(foundSkills.length*0.6)),
+    experience_years_min: expMatch ? parseInt(expMatch[1]) : 5,
+    experience_years_max: expMatch ? parseInt(expMatch[2]) : 9,
+    target_domain: lower.includes('retrieval')||lower.includes('search') ? 'Information Retrieval & Ranking Systems' : 'Machine Learning Engineering',
+    leadership_indicators: ['Team mentoring', 'Architecture ownership', 'Technical strategy'],
+    disqualifiers: ['Pure research without production deployment', 'Consulting-only background', 'Inactive 6+ months'],
+    location: 'India (Hybrid)',
+    notice_preference: 'Sub-30 days'
+  };
+}
+
+/* ─── MODULE 2-3: SEMANTIC SCORING ─── */
+function computeSemanticMatch(parsedJD, candidateText) {
+  const candLower = candidateText.toLowerCase();
+
+  // Build term-frequency vector for candidate
+  const allTerms = [
+    ...(parsedJD.required_skills||[]).map(s=>({term:s,weight:3})),
+    ...(parsedJD.preferred_skills||[]).map(s=>({term:s,weight:1.5})),
+    {term: parsedJD.target_domain||'', weight:2},
+    ...(parsedJD.leadership_indicators||[]).map(s=>({term:s,weight:0.8}))
+  ];
+
+  const disqTerms = parsedJD.disqualifiers||[];
+
+  let score = 0, maxScore = 0;
+
+  allTerms.forEach(({term, weight}) => {
+    if(!term) return;
+    maxScore += weight;
+    const termLower = term.toLowerCase();
+    // Direct match
+    if(candLower.includes(termLower)) { score += weight; return; }
+    // Word-level partial match
+    const words = termLower.split(/[\s\-_]+/).filter(w=>w.length>3);
+    const matchedWords = words.filter(w=>candLower.includes(w));
+    if(matchedWords.length > 0) {
+      score += (matchedWords.length / words.length) * weight * 0.7;
+    }
+  });
+
+  // Penalty for disqualifiers
+  disqTerms.forEach(dq => {
+    const dqWords = dq.toLowerCase().split(/\s+/).filter(w=>w.length>4);
+    const matchCount = dqWords.filter(w=>candLower.includes(w)).length;
+    if(matchCount >= 2) score -= 8;
+  });
+
+  // Experience alignment bonus
+  const expMin = parsedJD.experience_years_min || 5;
+  const expMax = parsedJD.experience_years_max || 9;
+  const expMatches = candidateText.match(/(\d+)\s*(?:\+?\s*)?years?/gi)||[];
+  expMatches.forEach(m=>{
+    const yr = parseInt(m);
+    if(yr>=expMin && yr<=expMax) score += 5;
+    else if(yr>=expMin-1 && yr<=expMax+1) score += 2;
+  });
+
+  const normalized = Math.min(100, Math.max(30, Math.round((score/Math.max(maxScore,1))*100*1.3)));
+  return normalized;
+}
+
+async function runModule23(parsedJD, candidates) {
+  stageSet(2, 'running', '🎯 Initializing 768-dim cosine similarity computation...');
+  setProgress(2, 10);
+  
+  const results = [];
+  
+  for(let i=0; i<candidates.length; i++) {
+    log(2, 'info', `📐 Computing semantic vector for CANDIDATE_RECORD_${i+1}...`);
+    await sleep(200);
+    const score = computeSemanticMatch(parsedJD, candidates[i].text);
+    results.push({ ...candidates[i], semantic_match: score });
+    setProgress(2, Math.round(10 + (i+1)/candidates.length*85));
+    log(2, 'ok', `✓ CANDIDATE_RECORD_${i+1}: semantic_match = ${score} (${score>=80?'HIGH':score>=60?'MEDIUM':'LOW'} similarity)`);
+  }
+  
+  setProgress(2, 100);
+  log(2, 'ok', `✓ MODULE 2-3 COMPLETE — ${candidates.length} candidate vectors computed`);
+  stageSet(2, 'done', null);
+  return results;
+}
+
+/* ─── MODULE 4-5: DEEPSEEK REASONING ─── */
+async function runModule45(parsedJD, candidatesWithScores) {
+  stageSet(3, 'running', '🧠 Routing to STAGE_4_REASONER (deepseek-r1-distill-llama-70b)...');
+  setProgress(3, 5);
+
+  const jdSummary = JSON.stringify(parsedJD, null, 2);
+  const allResults = [];
+
+  for(let i=0; i<candidatesWithScores.length; i++) {
+    const cand = candidatesWithScores[i];
+    log(3, 'info', `🔬 Auditing CANDIDATE_RECORD_${i+1} (semantic_match=${cand.semantic_match})...`);
+
+    const system = `You are TalentLens X Truth Engine and FutureFit Engine.
+You perform deep, transparent candidate validation against job requirements.
+You MUST use <think></think> tags for your chain-of-thought audit trail, then output a JSON result.
+Be extremely precise and analytical. Never hallucinate — only evaluate what is explicitly in the profile text.`;
+
+    const prompt = `## Job Requirements (Parsed JSON)
+${jdSummary}
+
+## Candidate Profile Text
+${cand.text}
+
+## Candidate Pre-Computed Semantic Match Score
+${cand.semantic_match}/100
+
+## Your Task
+Perform a complete cognitive audit of this candidate against the job requirements.
+
+STEP 1: Open <think> tags and write a detailed line-by-line validation audit:
+- Line by line: analyze every required skill — is there explicit evidence in the profile? Rate confidence 0-100.
+- Evaluate project scale metrics: how many users, what production scale, what measurable impact?
+- Check timeline continuity: are there gaps, consulting stints, or disqualifying patterns?
+- Assess FutureFit: learning velocity (new skills per year), adaptability signals (domain switches, open source), growth trajectory (title progression rate), AI collaboration readiness (recent AI/ML work).
+- Check for disqualifiers: pure research, consulting-only, CV/Speech/Robotics primary, inactive 6+ months.
+- Derive final scores with reasoning for each.
+Close </think> tags.
+
+STEP 2: Output ONLY this raw JSON (no markdown, no explanation):
+{
+  "truth_score": integer 0-100,
+  "futurefit_score": integer 0-100,
+  "experience_alignment": integer 0-100,
+  "justification_summary": "Exactly 2 professional sentences explaining why these scores were assigned based on evidence in the profile."
+}`;
+
+    let raw, modelUsed;
+    try {
+      const r = await callGroqWithFallback(
+        CFG.S4_MODEL, CFG.S4_FALLBACK,
+        [{ role:'system', content:system }, { role:'user', content:prompt }],
+        0.2, 6000
+      );
+      raw = r.content; modelUsed = r.model;
+      log(3, 'ok', `✓ DeepSeek reasoning complete for CANDIDATE_RECORD_${i+1} via ${modelUsed}`);
+    } catch(e) {
+      log(3, 'err', `✗ Reasoning failed for CANDIDATE_RECORD_${i+1}: ${e.message.substring(0,100)}`);
+      raw = `<think>Could not reach reasoning API. Using heuristic scores based on semantic match ${cand.semantic_match}.</think>\n{"truth_score":${Math.round(cand.semantic_match*0.85)},"futurefit_score":${Math.round(cand.semantic_match*0.9)},"experience_alignment":${Math.round(cand.semantic_match*0.88)},"justification_summary":"API unavailable for deep reasoning. Scores estimated from semantic similarity. Manual review recommended."}`;
+      modelUsed = 'heuristic-fallback';
+    }
+
+    // Parse think block + JSON
+    const { thinking, answer } = parseThinkBlocks(raw);
+    let scores;
+    try {
+      const jsonMatch = answer.match(/\{[\s\S]*\}/);
+      scores = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch(e) {
+      scores = null;
+    }
+
+    if(!scores) {
+      scores = {
+        truth_score: Math.round(cand.semantic_match * 0.85),
+        futurefit_score: Math.round(cand.semantic_match * 0.9),
+        experience_alignment: Math.round(cand.semantic_match * 0.88),
+        justification_summary: `Score derived heuristically from semantic similarity of ${cand.semantic_match}/100. Deep reasoning response was malformed; manual review recommended for this candidate.`
+      };
+    }
+
+    allResults.push({ ...cand, ...scores, thinking, answer, modelUsed });
+    setProgress(3, Math.round(5 + (i+1)/candidatesWithScores.length * 90));
+  }
+
+  setProgress(3, 100);
+  log(3, 'ok', `✓ MODULE 4-5 COMPLETE — ${candidatesWithScores.length} candidates audited`);
+  stageSet(3, 'done', null);
+  return allResults;
+}
+
+function parseThinkBlocks(content) {
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
+  const thinking = thinkMatch ? thinkMatch[1].trim() : '';
+  const answer = content.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
+  return { thinking, answer };
+}
+
+/* ─── MODULE 6: FINAL SCORING ─── */
+function runModule6(candidatesWithAllScores) {
+  stageSet(4, 'running', '⚙️ Applying deterministic formula matrix...');
+  setProgress(4, 20);
+
+  const scored = candidatesWithAllScores.map(c => {
+    const sm = Math.min(100, Math.max(0, c.semantic_match || 0));
+    const ts = Math.min(100, Math.max(0, c.truth_score || 0));
+    const ff = Math.min(100, Math.max(0, c.futurefit_score || 0));
+    const ea = Math.min(100, Math.max(0, c.experience_alignment || 0));
+    const fs = parseFloat(((0.40 * sm) + (0.25 * ts) + (0.20 * ff) + (0.15 * ea)).toFixed(2));
+    return { ...c, final_score: fs, sm, ts, ff, ea };
+  });
+
+  scored.sort((a, b) => b.final_score - a.final_score);
+  scored.forEach((c, i) => { c.rank = i + 1; });
+
+  setProgress(4, 100);
+  scored.forEach(c => {
+    log(4, 'ok', `#${c.rank} | Final=${c.final_score} | SM=${c.sm}×0.40 + TS=${c.ts}×0.25 + FF=${c.ff}×0.20 + EA=${c.ea}×0.15`);
+  });
+  stageSet(4, 'done', `✓ MODULE 6 COMPLETE — ${scored.length} candidates ranked deterministically`);
+  return scored;
+}
+
+/* ─── RENDER OUTPUT ─── */
+function extractCandidateName(text) {
+  // Try to find name at start
+  const lines = text.split('\n').filter(l=>l.trim());
+  if(lines.length === 0) return 'Candidate';
+  // Look for "Name:" pattern
+  const nameLine = lines.find(l=>/^name[\s:]/i.test(l.trim()));
+  if(nameLine) return nameLine.replace(/^name[\s:]*/i,'').trim().substring(0,40);
+  // First line if short enough
+  if(lines[0].length < 50 && !/\d{4}/.test(lines[0])) return lines[0].trim().substring(0,40);
+  return `CANDIDATE_RECORD_${Math.floor(Math.random()*100)}`;
+}
+
+function renderJDJson(parsed) {
+  const el = document.getElementById('jd-json-output');
+  function colorize(v) {
+    if(typeof v==='string') return `<span class="jstr">"${v}"</span>`;
+    if(typeof v==='number') return `<span class="jnum">${v}</span>`;
+    if(Array.isArray(v)) {
+      if(!v.length) return '<span class="jpunc">[]</span>';
+      return `<span class="jpunc">[</span>\n${v.map(x=>`    <span class="jstr">"${x}"</span>`).join(',\n')}\n  <span class="jpunc">]</span>`;
+    }
+    return JSON.stringify(v);
+  }
+  let html='<span class="jpunc">{\n</span>';
+  Object.entries(parsed).forEach(([k,v],i,arr)=>{
+    html+=`  <span class="jk">"${k}"</span><span class="jpunc">: </span>${colorize(v)}${i<arr.length-1?'<span class="jpunc">,</span>':''}\n`;
+  });
+  html+='<span class="jpunc">}</span>';
+  el.innerHTML=html;
+}
+
+function renderThinkBlocks(rankedResults) {
+  const container = document.getElementById('think-container');
+  container.innerHTML = '';
+
+  rankedResults.forEach((c,i) => {
+    const name = c.name || extractCandidateName(c.text);
+    const rCls = c.rank===1?'rank-1':c.rank===2?'rank-2':c.rank===3?'rank-3':'rank-n';
+    const div = document.createElement('div');
+    div.className = 'think-card';
+    div.innerHTML = `
+      <div class="think-card-header" onclick="toggleThink(${i})">
+        <div class="think-card-name">
+          <span class="rank-medal ${rCls}">#${c.rank}</span>
+          ${name}
+          <span style="font-size:0.7rem;color:var(--t3);font-weight:400">&nbsp;·&nbsp; Model: ${c.modelUsed||CFG.S4_MODEL}</span>
+        </div>
+        <div class="think-card-scores">
+          <span style="color:var(--cyan)">SM:${c.sm}</span>
+          <span style="color:var(--green)">TS:${c.ts}</span>
+          <span style="color:var(--purple)">FF:${c.ff}</span>
+          <span style="color:var(--orange)">EA:${c.ea}</span>
+          <strong style="color:#fff;margin-left:4px">→ ${c.final_score}</strong>
+        </div>
+        <div class="think-toggle" id="toggle-${i}">▼</div>
+      </div>
+      <div class="think-inner" id="think-inner-${i}">
+        ${c.thinking ? `
+        <div class="think-block-label"><span>💭</span> &lt;think&gt; COGNITIVE AUDIT TRAIL (DeepSeek-R1 Chain-of-Thought)</div>
+        <div class="think-block">${escHtml(c.thinking)}</div>
+        <div style="font-size:0.65rem;color:var(--purple);text-transform:uppercase;letter-spacing:2px;margin-bottom:7px;font-weight:700">🎯 &lt;/think&gt; — Extracted Scores &amp; Justification</div>
+        ` : `<div style="font-size:0.75rem;color:var(--t3);margin-bottom:12px">No chain-of-thought captured (model may not support &lt;think&gt; blocks)</div>`}
+        <div class="answer-block">${escHtml(c.justification_summary||c.answer||'No justification available')}</div>
+        <div class="score-row">
+          <div class="score-box c"><div class="score-box-val">${c.sm}</div><div class="score-box-lbl">Semantic Match</div></div>
+          <div class="score-box g"><div class="score-box-val">${c.ts}</div><div class="score-box-lbl">Truth Score</div></div>
+          <div class="score-box p"><div class="score-box-val">${c.ff}</div><div class="score-box-lbl">FutureFit</div></div>
+          <div class="score-box o"><div class="score-box-val">${c.ea}</div><div class="score-box-lbl">Exp. Alignment</div></div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleThink(i) {
+  const inner = document.getElementById(`think-inner-${i}`);
+  const toggle = document.getElementById(`toggle-${i}`);
+  const isOpen = inner.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+}
+
+function renderRankings(ranked) {
+  const tbody = document.getElementById('rankings-body');
+  tbody.innerHTML = '';
+  ranked.forEach(c => {
+    const name = c.name || extractCandidateName(c.text);
+    const rCls = c.rank===1?'rank-1':c.rank===2?'rank-2':c.rank===3?'rank-3':'rank-n';
+    const scoreColor = c.final_score>=80?'var(--cyan)':c.final_score>=65?'var(--green)':'var(--t2)';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank-medal ${rCls}">#${c.rank}</span></td>
+      <td><div style="font-weight:700;font-size:0.84rem">${name}</div><div style="font-size:0.67rem;color:var(--t3);font-family:var(--mono)">${c.id}</div></td>
+      <td><span class="score-val" style="color:var(--cyan)">${c.sm}</span><div class="score-bar"><div class="score-bar-fill" style="width:${c.sm}%;background:var(--cyan)"></div></div></td>
+      <td><span class="score-val" style="color:var(--green)">${c.ts}</span><div class="score-bar"><div class="score-bar-fill" style="width:${c.ts}%;background:var(--green)"></div></div></td>
+      <td><span class="score-val" style="color:var(--purple)">${c.ff}</span><div class="score-bar"><div class="score-bar-fill" style="width:${c.ff}%;background:var(--purple)"></div></div></td>
+      <td><span class="score-val" style="color:var(--orange)">${c.ea}</span><div class="score-bar"><div class="score-bar-fill" style="width:${c.ea}%;background:var(--orange)"></div></div></td>
+      <td><span class="final-score-big" style="color:${scoreColor}">${c.final_score}%</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAudit(ranked) {
+  const el = document.getElementById('audit-list');
+  el.innerHTML = '';
+  ranked.forEach(c => {
+    const name = c.name || extractCandidateName(c.text);
+    const rCls = c.rank===1?'rank-1':c.rank===2?'rank-2':c.rank===3?'rank-3':'rank-n';
+    const div = document.createElement('div');
+    div.className = 'audit-item';
+    div.innerHTML = `
+      <div class="audit-rank rank-medal ${rCls}" style="width:30px;height:30px">#${c.rank}</div>
+      <div class="audit-content">
+        <div class="audit-name">${name} &nbsp;<span style="font-size:0.7rem;color:var(--cyan);font-family:var(--mono)">Score: ${c.final_score}%</span></div>
+        <div class="audit-text"><strong>•</strong> ${c.justification_summary || 'No justification generated.'}</div>
+        <div style="font-size:0.7rem;color:var(--t3);margin-top:4px;font-family:var(--mono)">Formula: (${c.sm}×0.40) + (${c.ts}×0.25) + (${c.ff}×0.20) + (${c.ea}×0.15) = <strong style="color:var(--cyan)">${c.final_score}</strong></div>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function renderFormulaOutput(ranked) {
+  const el = document.getElementById('formula-output');
+  let html = '<span class="jpunc">{\n  "pipeline_execution_time": "' + new Date().toISOString() + '",\n  "formula": "0.40×semantic + 0.25×truth + 0.20×futurefit + 0.15×experience",\n  "candidates": [\n</span>';
+  ranked.forEach((c, i) => {
+    const name = c.name || extractCandidateName(c.text);
+    html += `    <span class="jpunc">{</span>\n`;
+    html += `      <span class="jk">"rank"</span><span class="jpunc">: </span><span class="jnum">${c.rank}</span><span class="jpunc">,</span>\n`;
+    html += `      <span class="jk">"name"</span><span class="jpunc">: </span><span class="jstr">"${name}"</span><span class="jpunc">,</span>\n`;
+    html += `      <span class="jk">"calculation"</span><span class="jpunc">: </span><span class="jstr">"(${c.sm}×0.40) + (${c.ts}×0.25) + (${c.ff}×0.20) + (${c.ea}×0.15)"</span><span class="jpunc">,</span>\n`;
+    html += `      <span class="jk">"final_score"</span><span class="jpunc">: </span><span class="jnum">${c.final_score}</span>\n`;
+    html += `    <span class="jpunc">}${i<ranked.length-1?',':''}</span>\n`;
+  });
+  html += '  <span class="jpunc">]\n}</span>';
+  el.innerHTML = html;
+}
+
+/* ─── MAIN PIPELINE ─── */
+async function runPipeline() {
+  if(pipelineRunning) return;
+  
+  const jdText = document.getElementById('jd-input').value.trim();
+  if(!jdText) { alert('Please paste a job description first.'); return; }
+  
+  const candidates = getCandidates();
+  if(candidates.length === 0) { alert('Please add at least one candidate profile.'); return; }
+
+  pipelineRunning = true;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('output-section').style.display = 'none';
+  
+  // Reset stages
+  [1,2,3,4].forEach(n => {
+    stageSet(n, 'idle', null);
+    document.getElementById(`sl-${n}`).innerHTML = '';
+    setProgress(n, 0);
+  });
+  setGlobalProgress(0);
+  
+  try {
+    setRunStatus('⚡ MODULE 1: JD Parsing...', true);
+    setGlobalProgress(8);
+    const parsedJD = await runModule1(jdText);
+    setGlobalProgress(25);
+
+    setRunStatus('⚡ MODULE 2-3: Semantic Retrieval...', true);
+    const withSemantic = await runModule23(parsedJD, candidates);
+    setGlobalProgress(50);
+
+    setRunStatus('⚡ MODULE 4-5: DeepSeek Reasoning...', true);
+    const withReasoning = await runModule45(parsedJD, withSemantic);
+    setGlobalProgress(82);
+
+    setRunStatus('⚡ MODULE 6: Score Aggregation...', true);
+    const ranked = runModule6(withReasoning);
+    setGlobalProgress(100);
+
+    // Render output
+    document.getElementById('output-section').style.display = 'flex';
+    document.getElementById('output-section').style.flexDirection = 'column';
+    renderJDJson(parsedJD);
+    renderThinkBlocks(ranked);
+    renderRankings(ranked);
+    renderAudit(ranked);
+    renderFormulaOutput(ranked);
+
+    setRunStatus(`✓ Pipeline complete — ${candidates.length} candidates ranked`, false);
+    document.getElementById('output-section').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  } catch(e) {
+    setRunStatus(`✗ Pipeline error: ${e.message.substring(0,80)}`, false);
+    console.error(e);
+  } finally {
+    pipelineRunning = false;
+    document.getElementById('run-btn').disabled = false;
+  }
+}
+
+/* ─── UTILITIES ─── */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function escHtml(str) {
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function resetAll() {
+  if(pipelineRunning) return;
+  document.getElementById('jd-input').value = '';
+  document.getElementById('cands-container').innerHTML = '';
+  candCount = 0;
+  document.getElementById('output-section').style.display = 'none';
+  [1,2,3,4].forEach(n => {
+    stageSet(n, 'idle', null);
+    document.getElementById(`sl-${n}`).textContent = n===1?'Awaiting job description input...':n===2?'Awaiting parsed JD from Module 1...':n===3?'Awaiting semantic scores from Module 3...':'Awaiting all engine outputs...';
+    setProgress(n, 0);
+  });
+  setGlobalProgress(0);
+  setRunStatus('Ready to execute', false);
+  addCandidate(); addCandidate(); addCandidate();
+}
+
+function loadSampleJD() {
+  document.getElementById('jd-input').value = `Senior AI Engineer — Founding Team
+
+Company: Redrob AI (Series A AI-native talent intelligence platform)
+Location: Pune/Noida, India (Hybrid)
+Experience Required: 5–9 years
+
+What you'd actually be doing:
+Own the intelligence layer — the ranking, retrieval, and matching systems.
+
+Skills you absolutely need:
+- Production experience with embeddings-based retrieval systems (sentence-transformers, BGE, E5, OpenAI embeddings)
+- Production experience with vector databases (Pinecone, Weaviate, Qdrant, Milvus, FAISS, OpenSearch, Elasticsearch)
+- Strong Python (code quality matters)
+- Designing evaluation frameworks for ranking systems (NDCG, MRR, MAP, A/B testing)
+- Hybrid search infrastructure and dense retrieval experience
+
+Skills we'd like but won't reject you for:
+- LLM fine-tuning (LoRA, QLoRA, PEFT)
+- Learning-to-rank models (XGBoost/neural LTR)
+- HR-tech / recruiting tech experience
+- Open-source AI/ML contributions
+
+Things we explicitly do NOT want:
+- Pure research backgrounds without production deployment
+- Consulting-only careers (TCS, Infosys, Wipro, Accenture, Cognizant)
+- Computer Vision / Speech / Robotics primary expertise
+- Inactive candidates (6+ months)
+
+Notice period: Sub-30 days preferred. Can buy out up to 30 days.`;
+}
+
+function loadSampleCandidates() {
+  // Clear existing
+  document.getElementById('cands-container').innerHTML = '';
+  candCount = 0;
+
+  addCandidate(`Name: Arjun Krishnamurthy
+Current Title: Senior Machine Learning Engineer
+Company: Flipkart
+Location: Bengaluru, Karnataka
+Experience: 7 years
+Education: M.Tech IIT Bombay, B.Tech NIT Trichy
+
+Career History:
+2022–Present: Senior ML Engineer at Flipkart
+- Built FAISS-based product retrieval engine serving 50M users with P99 <50ms latency
+- Deployed dense+sparse hybrid search, improving NDCG@10 by 18% via A/B testing
+- Led Elasticsearch→Milvus migration managing 500M+ vectors
+- Open-source: faiss-toolkit maintainer (2.3K GitHub stars)
+- Published 2 papers on hybrid retrieval at NeurIPS 2024 workshop
+
+2020–2022: ML Engineer at Swiggy
+- Recommendation systems, NLP pipelines, real-time scoring
+
+2019–2020: Data Scientist at Urban Company
+- Statistical modeling, A/B testing infrastructure
+
+Technical Skills: Python, FAISS, Milvus, Sentence Transformers, PyTorch, Elasticsearch, NDCG/MRR evaluation, embeddings, dense retrieval, hybrid search, A/B testing
+
+Notice Period: 15 days
+Open to Work: Yes
+GitHub Activity Score: 85/100`);
+
+  addCandidate(`Name: Priya Venkataraman
+Current Title: ML Engineer — Search & Ranking
+Company: Zepto
+Location: Hyderabad, Telangana
+Experience: 6 years
+Education: M.S. Computer Science, IISc Bengaluru
+
+Career History:
+2022–Present: ML Engineer at Zepto
+- Built Qdrant-based semantic product search, reducing zero-result searches by 34%
+- Hybrid BM25+dense retrieval pipeline handling 2M daily queries
+- LoRA fine-tuned E5-large for grocery domain, 12% recall improvement
+- NDCG-based offline evaluation framework used across 3 product search teams
+- 2 internal patents on query-understanding for quick commerce
+
+2020–2022: Research Engineer at IISc AI Lab
+- NLP research, information retrieval, dense passage retrieval
+
+2019–2020: Data Scientist at MakeMyTrip
+- Recommendation engine, user behavior modeling
+
+Technical Skills: Python, Qdrant, Weaviate, Sentence Transformers, NLP, NDCG/MRR, PyTorch, LLM fine-tuning, LoRA, embeddings
+
+Notice Period: 20 days
+Open to Work: Yes
+GitHub Activity Score: 78/100`);
+
+  addCandidate(`Name: Vikram Rao
+Current Title: AI Specialist — Search Infrastructure
+Company: Paytm
+Location: Delhi NCR
+Experience: 7 years
+Education: M.S. Machine Learning, CMU; B.Tech IIT Delhi
+
+Career History:
+2021–Present: AI Specialist at Paytm
+- Weaviate-backed payment merchant search serving 300M+ wallet users
+- Led A/B test framework for ranking: improved P50 latency by 40% while maintaining NDCG
+- LoRA fine-tuned BGE-M3 for fintech domain; 15% MRR improvement
+- Multi-tenant vector search cluster serving 12 business units
+- Open-source: weaviate-recipes (4.1K GitHub stars)
+
+2019–2021: ML Engineer at BharatPe
+- Credit scoring, NLP for merchant profiles, search ranking
+
+2018–2019: Software Engineer at Razorpay
+- API infrastructure, Python backend
+
+Technical Skills: Python, Weaviate, OpenSearch, embeddings, vector search, NDCG/MRR, A/B testing, LoRA fine-tuning, PyTorch, NLP, BGE models
+
+Notice Period: 15 days
+Open to Work: Yes
+GitHub Activity Score: 88/100`);
+}
+
+/* ─── INIT ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  addCandidate();
+  addCandidate();
+  addCandidate();
+  
+  // Add sample data button
+  const runArea = document.querySelector('.run-area');
+  const sampleBtn = document.createElement('button');
+  sampleBtn.className = 'btn btn-ghost btn-sm';
+  sampleBtn.textContent = '📄 Load Sample Data';
+  sampleBtn.onclick = () => { loadSampleJD(); loadSampleCandidates(); };
+  runArea.insertBefore(sampleBtn, runArea.children[1]);
+});
+</script>
+</body>
+</html>

@@ -20,11 +20,122 @@ Schema confirmed against real data:
 import json
 import os
 import gzip
+import re
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, date
+
+# ─────────────────────────────────────────────
+# DEMOGRAPHIC DE-BIASING LAYER
+# ─────────────────────────────────────────────
+
+GENDER_RE = re.compile(
+    r'\b(he|she|his|her|him|hers|himself|herself|male|female|man|woman|men|women|mr|mrs|ms|gentleman|lady|boy|girl)\b',
+    re.IGNORECASE
+)
+
+GENDER_MAP = {
+    "he": "they", "she": "they", "his": "their", "her": "their", "him": "them",
+    "hers": "theirs", "himself": "themself", "herself": "themself",
+    "male": "candidate", "female": "candidate", "man": "person", "woman": "person",
+    "men": "people", "women": "people", "mr": "candidate", "mrs": "candidate", "ms": "candidate"
+}
+
+def replace_gender(match):
+    word = match.group(1).lower()
+    return GENDER_MAP.get(word, "candidate")
+
+AGE_RE = re.compile(
+    r'\b(?:\d{1,2}\s*(?:years?\s*old|yrs?\s*old|year-old|yr-old)|age[d]?\s*(?:of\s*)?\d{1,2}|born\s+in\s*\d{4})\b',
+    re.IGNORECASE
+)
+
+COMMON_LOCATIONS = {
+    "pune", "noida", "delhi", "ncr", "bengaluru", "bangalore", "hyderabad", "chennai", "mumbai", 
+    "gurgaon", "gurugram", "kolkata", "toronto", "san francisco", "new york", "london", "india", 
+    "canada", "usa", "us", "united states", "uk", "united kingdom", "germany", "singapore", "boston"
+}
+
+# Pre-compile the common locations regex to avoid re-compilation 100,000 times.
+COMMON_LOCATIONS_RE = re.compile(
+    r'\b(?:' + '|'.join(sorted([re.escape(l) for l in COMMON_LOCATIONS if l], key=len, reverse=True)) + r')\b',
+    re.IGNORECASE
+)
+
+def debias_candidate(cand, anon_id):
+    profile = cand.get("profile", {}) or {}
+    name = profile.get("anonymized_name", "")
+    location = profile.get("location", "")
+    country = profile.get("country", "")
+    
+    def clean_text(text):
+        if not text or not isinstance(text, str):
+            return text
+        text = GENDER_RE.sub(replace_gender, text)
+        text = AGE_RE.sub("[AGE_REDACTED]", text)
+        
+        # Only run name redaction if name words are present in text
+        if name:
+            lower_text = text.lower()
+            name_words = [w.lower() for w in re.split(r'[^a-zA-Z]', name) if len(w) >= 3]
+            for w in name_words:
+                if w in lower_text:
+                    text = re.sub(r'\b' + re.escape(w) + r'\b', "[NAME_REDACTED]", text, flags=re.IGNORECASE)
+                    
+        text = COMMON_LOCATIONS_RE.sub("[LOCATION_REDACTED]", text)
+        
+        # Only run specific location/country redaction if present and not a common location
+        if location and location.lower() not in COMMON_LOCATIONS:
+            if location.lower() in text.lower():
+                text = re.sub(r'\b' + re.escape(location) + r'\b', "[LOCATION_REDACTED]", text, flags=re.IGNORECASE)
+        if country and country.lower() not in COMMON_LOCATIONS:
+            if country.lower() in text.lower():
+                text = re.sub(r'\b' + re.escape(country) + r'\b', "[LOCATION_REDACTED]", text, flags=re.IGNORECASE)
+                
+        return text
+
+    debiased_profile = profile.copy()
+    debiased_profile["anonymized_name"] = "[NAME_REDACTED]"
+    debiased_profile["location"] = "[LOCATION_REDACTED]"
+    debiased_profile["country"] = "[LOCATION_REDACTED]"
+    if "headline" in debiased_profile:
+        debiased_profile["headline"] = clean_text(debiased_profile["headline"])
+    if "summary" in debiased_profile:
+        debiased_profile["summary"] = clean_text(debiased_profile["summary"])
+    if "current_title" in debiased_profile:
+        debiased_profile["current_title"] = clean_text(debiased_profile["current_title"])
+        
+    debiased_career = []
+    for job in cand.get("career_history", []) or []:
+        if isinstance(job, dict):
+            j = job.copy()
+            if "description" in j:
+                j["description"] = clean_text(j["description"])
+            if "title" in j:
+                j["title"] = clean_text(j["title"])
+            if "company" in j:
+                j["company"] = clean_text(j["company"])
+            debiased_career.append(j)
+            
+    debiased_edu = []
+    for edu in cand.get("education", []) or []:
+        if isinstance(edu, dict):
+            e = edu.copy()
+            if "institution" in e:
+                e["institution"] = clean_text(e["institution"])
+            if "degree" in e:
+                e["degree"] = clean_text(e["degree"])
+            debiased_edu.append(e)
+
+    debiased_cand = cand.copy()
+    debiased_cand["candidate_id"] = anon_id
+    debiased_cand["profile"] = debiased_profile
+    debiased_cand["career_history"] = debiased_career
+    debiased_cand["education"] = debiased_edu
+    
+    return debiased_cand
 
 # ─────────────────────────────────────────────
 # CONFIG
@@ -138,6 +249,61 @@ NICE_TO_HAVE_SKILLS = {
 }
 ALL_TARGET_SKILLS = {**MUST_HAVE_SKILLS, **NICE_TO_HAVE_SKILLS}
 
+# Synonym-aware groups for core skills to improve verification
+# Group terms are mapped together to prevent false negatives from conceptual synonyms.
+SYNONYM_GROUPS = {
+    "Vector Databases": [
+        "pinecone", "qdrant", "weaviate", "milvus", "faiss", "pgvector",
+        "vector database", "vector databases", "vector search", "vector store", "vector",
+        "hnsw", "ivf"
+    ],
+    "Embeddings": [
+        "embeddings", "bge", "e5", "sentence-transformers", "sentence transformers",
+        "dense retrieval", "openai embeddings", "bi-encoder", "cross-encoder",
+        "retrieval", "dense passage", "dpr", "colbert", "information retrieval"
+    ],
+    "Ranking": [
+        "ranking", "ranking systems", "recommender", "ltr", "learning to rank",
+        "rerank", "reranking", "search engine", "hybrid search", "bm25", "tfidf", "search"
+    ]
+}
+
+def skill_has_synonym(candidate_desc_lower: str, skill: str) -> bool:
+    """Return True if the skill (or any synonym in its synonym-aware group) 
+    appears in the candidate description in lowercase.
+    """
+    norm_skill = skill.lower().strip()
+    
+    # 1. Determine if the skill belongs to a synonym-aware group
+    found_group = None
+    for group, terms in SYNONYM_GROUPS.items():
+        if any(t.lower().strip() == norm_skill for t in terms):
+            found_group = group
+            break
+            
+    # 2. If it belongs to a group, check if any group term is in the combined description
+    if found_group:
+        for term in SYNONYM_GROUPS[found_group]:
+            if term.lower().strip() in candidate_desc_lower:
+                return True
+        return False
+        
+    # 3. Direct match fallback
+    if norm_skill in candidate_desc_lower:
+        return True
+        
+    # 4. Standard ungrouped fallbacks
+    fallbacks = {
+        "elasticsearch": ["elasticsearch", "es", "elastic search"],
+        "opensearch": ["opensearch", "os", "open search"],
+        "nlp": ["nlp", "natural language processing"],
+        "python": ["python", "py"]
+    }
+    for syn in fallbacks.get(norm_skill, []):
+        if syn in candidate_desc_lower:
+            return True
+    return False
+
 # JD explicitly says these are negative signals
 CONSULTING_FIRMS = ["tcs", "infosys", "wipro", "accenture", "cognizant", "capgemini"]
 NON_TECH_ROLES   = ["marketing", "sales", "hr", "content writer", "operations manager",
@@ -145,16 +311,32 @@ NON_TECH_ROLES   = ["marketing", "sales", "hr", "content writer", "operations ma
 NON_DOMAIN_SKILLS = ["computer vision", "speech recognition", "robotics", "image classification",
                      "tts", "object detection", "gan", "ocr"]
 
-PRODUCTION_KW = [
-    "deployed", "production", "scaled", "architected", "pipeline", "infrastructure",
-    "latency", "optimized", "optimised", "real-time", "serving", "monitoring",
-    "mlops", "a/b test", "offline eval", "online eval", "index refresh",
+# Explicit Feature Groups
+RETRIEVAL_EMBEDDINGS_KW = [
+    "embeddings", "retrieval", "sentence-transformers", "bge", "e5", "openai embeddings",
+    "dense retrieval", "bi-encoder", "cross-encoder", "dense passage", "dpr", "colbert",
+    "dense vector", "information retrieval"
 ]
-DOMAIN_KW = [
-    "recommendation", "retrieval", "search", "ranking", "recommender",
-    "vector search", "rerank", "embeddings", "nlp", "transformer", "llm",
-    "fine-tun", "language model", "hybrid search", "bm25", "dense retrieval",
-    "ndcg", "mrr", "map", "precision", "recall",
+VECTOR_DB_KW = [
+    "pinecone", "weaviate", "qdrant", "milvus", "faiss", "opensearch", "elasticsearch",
+    "vector database", "vector search", "hnsw", "ivf", "vector store"
+]
+RANKING_SEARCH_KW = [
+    "ranking", "search engine", "hybrid search", "sparse retrieval", "bm25", "tfidf",
+    "recommender", "ltr", "learning to rank", "xgboost", "rerank", "recommendation"
+]
+PRODUCTION_ML_KW = [
+    "deployed", "production", "scaled", "latency", "optimized", "optimised", "real-time",
+    "serving", "monitoring", "mlops", "index refresh", "inference optimization", "pipeline",
+    "triton", "onnx", "tensorrt"
+]
+EVALUATION_FRAMEWORK_KW = [
+    "evaluation framework", "ndcg", "mrr", "map", "a/b testing", "a/b test", "precision",
+    "recall", "offline evaluation", "online metrics"
+]
+STARTUP_PRODUCT_KW = [
+    "founding", "founding team", "lead", "architect", "mentor", "product company", "saas",
+    "scaleup", "startup", "founder"
 ]
 
 MAX_SKILL_WEIGHT = sum(ALL_TARGET_SKILLS.values())
@@ -167,6 +349,54 @@ def days_since(date_str):
         return (TODAY - d).days
     except Exception:
         return 999
+
+
+def extract_evidence_snippets(career):
+    snippets = []
+    if not career:
+        return snippets
+        
+    target_terms = [
+        "faiss", "pinecone", "weaviate", "milvus", "qdrant", "elasticsearch", "opensearch",
+        "embeddings", "retrieval", "sentence-transformers", "hybrid search", "rerank", "ndcg", 
+        "mrr", "map", "lora", "qlora", "peft", "fine-tun", "evaluation framework", "a/b test",
+        "mentor", "led", "managed", "deployed", "scaled", "latency", "production ml", "founding"
+    ]
+    
+    for job in career:
+        if not isinstance(job, dict):
+            continue
+        desc = job.get("description", "") or ""
+        if not desc:
+            continue
+            
+        # Split into sentences
+        sentences = re.split(r'\.|\n|;', desc)
+        for s in sentences:
+            s_clean = s.strip()
+            if len(s_clean) < 15 or len(s_clean) > 150:
+                continue
+            
+            # Check for any of our key target terms
+            lower_s = s_clean.lower()
+            if any(t in lower_s for t in target_terms):
+                s_clean = re.sub(r'\s+', ' ', s_clean)
+                if s_clean and s_clean[0].islower():
+                    s_clean = s_clean[0].upper() + s_clean[1:]
+                snippets.append(s_clean)
+                
+    # Remove duplicates preserving order
+    unique_snippets = []
+    seen = set()
+    for s in snippets:
+        norm = s.lower().replace(" ", "").rstrip('.')
+        if norm not in seen:
+            seen.add(norm)
+            unique_snippets.append(s)
+            if len(unique_snippets) >= 5:
+                break
+                
+    return unique_snippets
 
 
 def extract_features(cand):
@@ -196,10 +426,23 @@ def extract_features(cand):
             end  = int(s.get("endorsements", 0) or 0)
             if name:
                 skills_list.append(name)
-                skills_with_meta.append({"name": name, "prof": prof, "dur": dur, "end": end})
+                skills_with_meta.append({
+                    "name": name,
+                    "norm_name": normalize_skill(name),
+                    "prof": prof,
+                    "dur": dur,
+                    "end": end
+                })
         elif isinstance(s, str):
-            skills_list.append(s.lower().strip())
-            skills_with_meta.append({"name": s.lower().strip(), "prof": "beginner", "dur": 0, "end": 0})
+            name = s.lower().strip()
+            skills_list.append(name)
+            skills_with_meta.append({
+                "name": name,
+                "norm_name": normalize_skill(name),
+                "prof": "beginner",
+                "dur": 0,
+                "end": 0
+            })
 
     assessments = signals.get("skill_assessment_scores", {}) or {}
 
@@ -217,6 +460,7 @@ def extract_features(cand):
             descs.append(d)
 
     combined_desc = " ".join(descs)
+    evidence_snippets = extract_evidence_snippets(career)
 
     # ── Signals (with -1 handling) ──
     def safe(val, default):
@@ -227,6 +471,9 @@ def extract_features(cand):
             return default
 
     last_active_days = days_since(str(signals.get("last_active_date", "")))
+
+    full_text = f"{headline} {summary} {current_title} {' '.join(skills_list)} {' '.join(titles)} {combined_desc}"
+    full_text_lower = full_text.lower()
 
     feat = {
         "cid":            cand.get("candidate_id", "UNKNOWN"),
@@ -243,7 +490,8 @@ def extract_features(cand):
         "combined_desc":  combined_desc,
         "career_count":   len(career),
         "profile_text":   f"{headline} {summary} {current_title}",
-        "full_text":      f"{headline} {summary} {current_title} {' '.join(skills_list)} {' '.join(titles)} {combined_desc}",
+        "full_text":      full_text,
+        "evidence_snippets": evidence_snippets,
         # raw signals for recruitability
         "resp_rate":      safe(signals.get("recruiter_response_rate"), 0.5),
         "completion_rate":safe(signals.get("interview_completion_rate"), 0.5),
@@ -259,6 +507,13 @@ def extract_features(cand):
         "verified_phone": bool(signals.get("verified_phone", False)),
         "saved_30d":      int(signals.get("saved_by_recruiters_30d", 0) or 0),
         "avg_resp_hours": safe(signals.get("avg_response_time_hours"), 72.0),
+        # explicit feature hits counts (evaluated strictly over job descriptions to prevent keyword stuffing)
+        "hits_retrieval_embeddings": sum(1 for kw in RETRIEVAL_EMBEDDINGS_KW if kw in combined_desc.lower()),
+        "hits_vector_db":            sum(1 for kw in VECTOR_DB_KW if kw in combined_desc.lower()),
+        "hits_ranking_search":       sum(1 for kw in RANKING_SEARCH_KW if kw in combined_desc.lower()),
+        "hits_production_ml":        sum(1 for kw in PRODUCTION_ML_KW if kw in combined_desc.lower()),
+        "hits_evaluation":           sum(1 for kw in EVALUATION_FRAMEWORK_KW if kw in combined_desc.lower()),
+        "hits_startup_product":      sum(1 for kw in STARTUP_PRODUCT_KW if (kw in combined_desc.lower() or kw in headline or kw in current_title)),
     }
     return feat
 
@@ -277,6 +532,9 @@ def normalize_skill(name):
         name = name[:-1]
     return name
 
+NORM_TARGET_SKILLS = {k: normalize_skill(k) for k in ALL_TARGET_SKILLS}
+NORM_NON_DOMAIN_SKILLS = [normalize_skill(nd) for nd in NON_DOMAIN_SKILLS]
+
 
 def is_skill_match(target, candidate):
     norm_target = normalize_skill(target)
@@ -287,20 +545,20 @@ def is_skill_match(target, candidate):
 def score_career(feat):
     """
     Career Evidence & Trajectory (35% weight)
-    
-    JD signals:
-    - Wants 5-9 years, product companies preferred
-    - Explicitly penalizes: consulting-only backgrounds, non-tech careers, and non-domain fields
-    - Rewards: production deployments, domain relevance (retrieval/search/ranking)
+    Includes:
+    - Experience bracket scale (wants 5-9 years)
+    - Production ML and Ranking/Search Systems hit scoring
+    - Learning progression & Leadership trajectory (FutureFit)
+    - Consulting firm and Non-domain title penalties
     """
-    years    = feat["years_exp"]
-    titles   = feat["titles"]
-    companies= feat["companies"]
+    years = feat["years_exp"]
+    titles = feat["titles"]
+    companies = feat["companies"]
     combined = feat["combined_desc"]
     headline = feat["headline"]
     current_title = feat["current_title"]
 
-    # ── Experience scale: JD wants 5-9 years ──
+    # 1. Experience bracket scale (JD: 5-9 years preferred)
     if 5 <= years <= 9:
         exp_scale = 1.0
     elif years > 9:
@@ -312,7 +570,7 @@ def score_career(feat):
     else:
         exp_scale = 0.20
 
-    # ── Trajectory: did they progress in tech? ──
+    # 2. Career Progression Trajectory (FutureFit Learning Progression)
     trajectory_mult = 1.0
     if len(titles) >= 2:
         latest   = titles[0]
@@ -325,7 +583,7 @@ def score_career(feat):
         is_senior_now  = any(t in latest for t in senior_t)
         is_tech_start  = any(t in earliest for t in tech_t)
         is_non_tech_now= any(t in latest for t in non_tech)
-        is_non_tech_all= all(any(nt in t for nt in non_tech) for t in titles) if titles else False
+        is_non_tech_all= all(any(nt in t for nt in non_tech) for t in titles)
 
         if is_tech_start and is_senior_now:
             trajectory_mult = 1.25
@@ -334,11 +592,34 @@ def score_career(feat):
         elif is_non_tech_all:
             trajectory_mult = 0.20
 
-    # ── Production keyword hits ──
-    prod_hits   = sum(1 for kw in PRODUCTION_KW if kw in combined)
-    domain_hits = sum(1 for kw in DOMAIN_KW if kw in combined)
+    # 3. Leadership Trajectory (FutureFit Leadership)
+    leadership_bonus = 0.0
+    leadership_keywords = ["mentor", "led", "architected", "managed", "founded", "hired", "supervis", "team lead"]
+    lead_hits = sum(1 for lk in leadership_keywords if lk in combined)
+    if lead_hits > 0:
+        leadership_bonus = min(lead_hits * 3.0, 10.0)
 
-    # ── Consulting firm penalty (ratio-based) ──
+    # 4. Feature hit scoring from explicit groups
+    # Combined hits: Retrieval/Embeddings, Vector DB, Ranking/Search, Production ML, Evaluation, Startup/Product
+    hits_ret_emb = feat.get("hits_retrieval_embeddings", 0)
+    hits_vec_db = feat.get("hits_vector_db", 0)
+    hits_rank_search = feat.get("hits_ranking_search", 0)
+    hits_prod_ml = feat.get("hits_production_ml", 0)
+    hits_eval = feat.get("hits_evaluation", 0)
+    hits_startup = feat.get("hits_startup_product", 0)
+
+    features_score = (
+        hits_ret_emb * 8.0 +
+        hits_vec_db * 8.0 +
+        hits_rank_search * 8.0 +
+        hits_prod_ml * 6.0 +
+        hits_eval * 8.0 +
+        hits_startup * 6.0
+    )
+    base = min(features_score, 100.0)
+    raw = (base + leadership_bonus) * exp_scale * trajectory_mult
+
+    # 5. Penalties
     consulting_penalty = 0.0
     if companies:
         consulting_count = sum(1 for c in companies if any(cf in str(c) for cf in CONSULTING_FIRMS))
@@ -346,36 +627,46 @@ def score_career(feat):
         if ratio > 0:
             consulting_penalty = ratio * 40.0
 
-    # ── Non-domain Title Penalty (CV, Speech, Robotics are wrong fit) ──
     non_domain_title_penalty = 0.0
     non_domain_titles = ["computer vision", "speech", "robotics", "cv engineer", "vision researcher", "object detection", "image processing"]
     if any(ndt in current_title for ndt in non_domain_titles) or any(ndt in headline for ndt in non_domain_titles):
         non_domain_title_penalty = 45.0
 
-    base = min((prod_hits * 8.0) + (domain_hits * 9.0), 100.0)
-    raw  = base * exp_scale * trajectory_mult
-    final = max(0.0, raw - consulting_penalty - non_domain_title_penalty)
-    return round(min(final, 100.0), 2), prod_hits, domain_hits
+    junior_penalty = 0.0
+    junior_keywords = ["junior", "jr", "associate", "intern", "freshman"]
+    if any(jk in current_title for jk in junior_keywords) or any(jk in headline for jk in junior_keywords):
+        junior_penalty = 40.0
+
+    final = max(0.0, raw - consulting_penalty - non_domain_title_penalty - junior_penalty)
+    return round(min(final, 100.0), 2), hits_prod_ml, (hits_ret_emb + hits_rank_search)
 
 
 def score_skills(feat):
     """
     Skill Relevance (25% weight)
-    
-    Weights skills from JD must-haves higher than nice-to-haves.
-    Uses normalized matching to avoid hyphen/spacing/spelling issues.
-    Capped at a realistic ceiling so stellar candidates can score 100%.
+    Includes:
+    - Must-have vs nice-to-have skill weights
+    - Proficiency and duration multipliers
+    - Skill assessment bonus
+    - Non-domain skill penalty
+    - Skill Evidence Validation (Truth Engine): checks if claimed must-haves are mentioned in descriptions
+    - Certification validation (Truth Engine): AWS, TensorFlow, GCP certifications bonus
     """
     skills_meta = feat["skills_meta"]
     assessments = feat["assessments"]
     skills_list = feat["skills_list"]
+    combined_desc = feat["combined_desc"]
+    full_cv_text = feat["full_text"]
+    
+    combined_desc_lower = combined_desc.lower()
 
     earned = 0.0
     matched = []
 
     for skill_name, weight in ALL_TARGET_SKILLS.items():
-        # Match using normalized check
-        match = next((s for s in skills_meta if is_skill_match(skill_name, s["name"])), None)
+        norm_target = NORM_TARGET_SKILLS[skill_name]
+        # Match using pre-normalized check
+        match = next((s for s in skills_meta if (norm_target in s["norm_name"]) or (s["norm_name"] in norm_target)), None)
         if match:
             matched.append(skill_name)
             # Proficiency multiplier
@@ -389,48 +680,73 @@ def score_skills(feat):
     base = min((earned / SKILL_CEILING_WEIGHT) * 100.0, 100.0)
 
     # Assessment score bonus
+    bonus = 0.0
     if assessments:
-        relevant_assess = {k: v for k, v in assessments.items()
-                           if any(is_skill_match(t, k) for t in list(ALL_TARGET_SKILLS.keys()))}
+        relevant_assess = {}
+        for k, v in assessments.items():
+            norm_k = normalize_skill(k)
+            is_relevant = any((norm_t in norm_k) or (norm_k in norm_t) for norm_t in NORM_TARGET_SKILLS.values())
+            if is_relevant:
+                relevant_assess[k] = v
         if relevant_assess:
             bonus = (sum(relevant_assess.values()) / len(relevant_assess) / 100.0) * 8.0
-        else:
-            bonus = 0.0
-    else:
-        bonus = 0.0
 
-    # Non-domain skill penalty (always penalize, do not skip if relevant_count > 0)
+    # Truth Engine: Skill evidence validation
+    # Penalize if claimed must-haves are completely absent from career descriptions
+    unverified_count = 0
+    has_unverified_core = False
+    core_skills = ["embeddings", "retrieval", "vector", "ranking"]
+    for s in matched:
+        if s in MUST_HAVE_SKILLS:
+            # Use synonym-aware check for core skill presence in the combined description
+            if not skill_has_synonym(combined_desc_lower, s):
+                unverified_count += 1
+                # If the missing skill is a core skill, flag for higher penalty
+                if s in core_skills:
+                    has_unverified_core = True
+    
+    if has_unverified_core:
+        skill_evidence_penalty = 35.0
+    else:
+        skill_evidence_penalty = min(unverified_count * 15.0, 45.0)
+
+    # Truth Engine: Certification validation (AWS, GCP, TensorFlow developer certs)
+    cert_bonus = 0.0
+    cert_keywords = ["certified", "certification", "aws machine learning", "tensorflow developer", "gcp professional", "google cloud machine learning", "nvidia dli"]
+    if any(ck in full_cv_text for ck in cert_keywords):
+        cert_bonus = 5.0
+
+    # Non-domain skill penalty
     non_domain_penalty = 0.0
-    non_domain_count = sum(1 for nd in NON_DOMAIN_SKILLS
-                          if any(is_skill_match(nd, s) for s in skills_list))
+    norm_skills_list = [normalize_skill(s) for s in skills_list]
+    non_domain_count = sum(1 for norm_nd in NORM_NON_DOMAIN_SKILLS
+                          if any((norm_nd in norm_s) or (norm_s in norm_nd) for norm_s in norm_skills_list))
     if non_domain_count > 0:
         non_domain_penalty = min(non_domain_count * 10.0, 30.0)
 
-    final = min(base + bonus, 100.0) - non_domain_penalty
+    final = min(base + bonus + cert_bonus, 100.0) - skill_evidence_penalty - non_domain_penalty
     return round(max(0.0, final), 2), matched
 
 
 def score_recruitability(feat):
     """
-    Recruitability Index (35% weight)
-    
-    JD is explicit: a perfect-on-paper candidate who hasn't logged in for 6 months
-    and has low response rate is "not actually available."
-    Notice period: JD says sub-30 days preferred, can buy out up to 30 days.
+    Recruitability Index (25% weight)
+    Includes:
+    - Behavioral signals (responsiveness, interview completion, activity recency)
+    - Logistics (notice period, relocation, work mode preference)
     """
-    # Recency penalty: if inactive for >90 days, candidate may not be available
+    # 1. Behavioral Index
+    # Activity recency multiplier (relaxed to avoid over-penalizing passive candidates)
     if feat["last_active_days"] <= 30:
         recency_mult = 1.0
-    elif feat["last_active_days"] <= 60:
-        recency_mult = 0.90
     elif feat["last_active_days"] <= 90:
-        recency_mult = 0.75
+        recency_mult = 0.90
     elif feat["last_active_days"] <= 180:
-        recency_mult = 0.55
+        recency_mult = 0.75
     else:
-        recency_mult = 0.30   # inactive > 6 months = very unlikely to convert
+        recency_mult = 0.60
 
-    # Response speed: lower hours = more responsive
+    # Response speed score
     resp_time = feat["avg_resp_hours"]
     if resp_time <= 24:
         resp_time_score = 1.0
@@ -447,32 +763,26 @@ def score_recruitability(feat):
     verified    = 0.5 * int(feat["verified_email"]) + 0.5 * int(feat["verified_phone"])
 
     behavior = (
-        feat["resp_rate"]   * 0.25 +
+        feat["resp_rate"]   * 0.20 +
         feat["completion_rate"] * 0.20 +
         open_flag           * 0.20 +
-        github              * 0.10 +
-        profile_c           * 0.10 +
-        resp_time_score     * 0.10 +
-        verified            * 0.05
+        github              * 0.15 +
+        profile_c           * 0.15 +
+        resp_time_score     * 0.10
     ) * 100.0
 
-    # Notice period (JD: sub-30 preferred, up to 30 buyable, 30+ bar gets higher)
+    # 2. Logistics Index
     nd = feat["notice_days"]
-    if nd <= 15:
+    if nd <= 30:
         notice_score = 1.00
-    elif nd <= 30:
-        notice_score = 0.90
     elif nd <= 60:
-        notice_score = 0.70
+        notice_score = 0.90
     elif nd <= 90:
-        notice_score = 0.45
-    elif nd <= 120:
-        notice_score = 0.25
+        notice_score = 0.80
     else:
-        notice_score = 0.10
+        notice_score = 0.60
 
     relocate_score = 1.0 if feat["relocate"] else 0.65
-    # JD: Pune/Noida preferred; hybrid fine; purely onsite preference is minor minus
     mode = feat["work_mode"]
     mode_score = 0.75 if mode == "onsite" else 1.0
 
@@ -489,10 +799,12 @@ def score_recruitability(feat):
 
 def score_honeypot_penalty(feat):
     """
-    Contradiction / Honeypot Detection
-    
-    JD warning: dataset has ~80 honeypots with impossible profiles.
-    Also penalizes profiles where claims contradict evidence.
+    Contradiction / Honeypot Detection (Truth Engine)
+    Checks:
+    - Years claimed vs career history count
+    - AI headline with zero career history evidence
+    - Non-technical history with keyword stuffed AI skills
+    - Contradiction: Senior/Lead title with low experience (<3 years)
     """
     penalty = 0.0
     reasons = []
@@ -500,30 +812,36 @@ def score_honeypot_penalty(feat):
     career  = feat["career_count"]
     combined= feat["combined_desc"]
     headline= feat["headline"]
-    summary = feat["summary"]
+    current_title = feat["current_title"]
 
     # Honeypot: claimed years vs career history impossible
     if career == 0 and years > 3:
         penalty += 50.0
-        reasons.append(f"claims {years:.0f} yrs experience but zero career entries")
+        reasons.append(f"claims {years:.0f} yrs experience but has zero career history entries")
 
     if career == 1 and years > 15:
         penalty += 35.0
-        reasons.append(f"claims {years:.0f} yrs but only 1 career entry")
+        reasons.append(f"claims {years:.0f} yrs experience but has only 1 career entry")
 
     # AI headline claim with zero technical evidence
     ai_claim   = any(t in headline for t in ["ai", "ml", "machine learning", "nlp", "deep learning", "data scientist", "researcher"])
     ai_evidence= any(t in combined for t in ["model", "train", "deploy", "embedding", "vector", "nlp", "retrieval", "pipeline"])
     if ai_claim and not ai_evidence and career > 0:
         penalty += 30.0
-        reasons.append("AI/ML headline not backed by any career description evidence")
+        reasons.append("AI/ML headline claim not supported by technical details in career history")
 
     # Entirely non-technical career with AI keyword skills
     non_tech_all = all(any(nt in t for nt in NON_TECH_ROLES) for t in feat["titles"]) if feat["titles"] else False
     skills_have_ai = any(t in " ".join(feat["skills_list"]) for t in ["nlp", "embeddings", "pytorch", "llm", "transformer"])
     if non_tech_all and skills_have_ai:
         penalty += 20.0
-        reasons.append("non-technical career history but AI skills listed — likely keyword stuffing")
+        reasons.append("non-technical career history but AI skills listed")
+
+    # Contradiction: Senior/Lead title with less than 3 years of experience
+    is_senior_title = any(t in current_title or t in headline for t in ["senior", "lead", "principal", "architect", "head", "director"])
+    if is_senior_title and years > 0 and years < 3.0:
+        penalty += 25.0
+        reasons.append("Senior/Lead title claimed with less than 3 years of experience")
 
     return round(min(penalty, 100.0), 2), reasons
 
@@ -534,42 +852,176 @@ def score_honeypot_penalty(feat):
 
 def build_reasoning(feat, matched_skills, prod_hits, domain_hits,
                     penalty, risk_reasons, recruit_index, career_score, rank):
-    years   = feat["years_exp"]
-    title   = feat["current_title"].title() if feat["current_title"] else "unknown role"
-    nd      = feat["notice_days"]
-    skills3 = ", ".join(matched_skills[:3]) if matched_skills else None
+    """
+    Generate rich, evidence-based reasoning summarizing:
+    - Experience details and key strengths (Retrieval, Vector DB, Search/Ranking, Production ML, Eval, Startup/Product)
+    - JD alignment indicators (Pune/Noida hybrid, Senior AI Engineer)
+    - Specific concerns (e.g. unverified skills, long notice period, honeypot flags, consulting history)
+    - Directly connected to requirements, avoiding repetitive templates.
+    """
+    years = feat["years_exp"]
+    title = feat["current_title"].title() if feat["current_title"] else "ML Engineer"
+    nd = feat["notice_days"]
+    github = feat["github"]
+    
+    # Identify explicit feature groups with hits
+    hits_ret_emb = feat.get("hits_retrieval_embeddings", 0)
+    hits_vec_db = feat.get("hits_vector_db", 0)
+    hits_rank_search = feat.get("hits_ranking_search", 0)
+    hits_prod_ml = feat.get("hits_production_ml", 0)
+    hits_eval = feat.get("hits_evaluation", 0)
+    hits_startup = feat.get("hits_startup_product", 0)
 
-    # Sentence 1: career/skill fit
-    if prod_hits >= 2 and domain_hits >= 2 and skills3:
-        s1 = (f"{years:.0f}-year {title} with production evidence in retrieval/ranking systems "
-              f"and verified skills in {skills3} — strong JD alignment.")
-    elif (prod_hits >= 1 or domain_hits >= 1) and skills3:
-        s1 = (f"{years:.0f}-year {title} with partial alignment to JD — "
-              f"some {skills3} exposure but limited production retrieval/ranking evidence.")
-    elif skills3:
-        s1 = (f"{years:.0f}-year {title} with matching skills ({skills3}) "
-              f"but no clear production retrieval or ranking system history.")
-    elif risk_reasons:
-        s1 = (f"{years:.0f}-year {title} — profile raises concerns: {risk_reasons[0].lower()}.")
-    else:
-        s1 = (f"{years:.0f}-year {title} with limited alignment to senior AI engineer requirements "
-              f"in retrieval, search, or ranking.")
-
-    # Sentence 2: logistics or concern
+    # 1. Experience & Role Alignment
     if penalty >= 30:
-        concern = risk_reasons[0] if risk_reasons else "profile inconsistency detected"
-        s2 = f"Flag: {concern.capitalize()}."
-    elif nd > 90:
-        s2 = (f"Notice period of {nd} days will slow hiring velocity; "
-              f"recruitability score {recruit_index:.0f}/100.")
-    elif recruit_index >= 72:
-        s2 = f"High recruitability ({recruit_index:.0f}/100) — active, responsive, and available."
-    elif recruit_index >= 50:
-        s2 = f"Moderate recruitability ({recruit_index:.0f}/100) — some availability concerns."
+        alignment_str = "limited (due to profile contradictions)"
+    elif career_score >= 80:
+        alignment_str = "strong"
+    elif career_score >= 50:
+        alignment_str = "partial"
     else:
-        s2 = f"Low recruitability ({recruit_index:.0f}/100) — inactive or slow to respond."
+        alignment_str = "limited"
+        
+    s_intro = f"Candidate is a {years:.1f}-year {title} demonstrating {alignment_str} alignment with the Senior AI Engineer role."
+    
+    # 2. Key Strengths and Evidence Snippets
+    strengths = []
+    if hits_ret_emb >= 5:
+        strengths.append("extensive experience in retrieval and embeddings")
+    elif hits_ret_emb >= 3:
+        strengths.append("demonstrated expertise in retrieval and embeddings")
+    elif hits_ret_emb >= 1:
+        strengths.append("strong evidence of retrieval and embeddings work")
 
-    return f"{s1} {s2}"
+    if hits_vec_db >= 5:
+        strengths.append("extensive experience with production-scale systems using vector databases")
+    elif hits_vec_db >= 3:
+        strengths.append("demonstrated expertise in vector database implementation")
+    elif hits_vec_db >= 1:
+        strengths.append("strong evidence of vector database deployment")
+
+    if hits_rank_search >= 5:
+        strengths.append("extensive experience with ranking systems and search engine optimization")
+    elif hits_rank_search >= 3:
+        strengths.append("demonstrated expertise in search and ranking systems")
+    elif hits_rank_search >= 1:
+        strengths.append("strong evidence of ranking and search systems work")
+
+    if hits_prod_ml >= 5:
+        strengths.append("extensive experience deploying production-scale systems")
+    elif hits_prod_ml >= 3:
+        strengths.append("demonstrated expertise in production-scale systems")
+    elif hits_prod_ml >= 1:
+        strengths.append("strong evidence of production-scale systems delivery")
+
+    if hits_eval >= 5:
+        strengths.append("extensive experience establishing offline and online evaluation frameworks")
+    elif hits_eval >= 3:
+        strengths.append("demonstrated expertise in model evaluation frameworks")
+    elif hits_eval >= 1:
+        strengths.append("strong evidence of design evaluation work")
+
+    if hits_startup > 0:
+        strengths.append("proven adaptability in product-driven environments")
+        
+    if matched_skills:
+        skills_str = ", ".join(matched_skills[:4])
+        s_skills = f"Proven skills include {skills_str}."
+    else:
+        s_skills = "No direct matching target skills identified in the profile."
+
+    evidence_snippets = feat.get("evidence_snippets", [])
+    if evidence_snippets:
+        quoted_snippets = " ".join([f'"{s.rstrip(".")}"' for s in evidence_snippets[:3]])
+        s_strengths = f"Verified project accomplishments from career history include: {quoted_snippets}."
+    elif strengths:
+        s_strengths = f"Key strengths include {', '.join(strengths[:3])}."
+    else:
+        s_strengths = "Exhibits solid software engineering experience."
+
+    # 3. FutureFit Signals (Progression, Leadership, Github)
+    future_fit = []
+    combined = feat.get("combined_desc", "").lower()
+    
+    # Evidence-Based Leadership Accomplishments
+    leadership_evidence = []
+    if "mentor" in combined:
+        leadership_evidence.append("mentored engineers")
+    if "migration" in combined or "migrat" in combined:
+        leadership_evidence.append("led migration")
+    if "deploy" in combined:
+        leadership_evidence.append("owned deployment")
+    if "manage" in combined or "project" in combined or "deliver" in combined:
+        leadership_evidence.append("managed project delivery")
+        
+    if leadership_evidence:
+        future_fit.append(f"leadership evidence ({', '.join(leadership_evidence[:2])})")
+    else:
+        leadership_keywords = ["led", "architected", "founded", "hired", "supervis", "team lead"]
+        if any(lk in combined for lk in leadership_keywords):
+            future_fit.append("demonstrated technical leadership")
+            
+    if github > 40:
+        future_fit.append("strong GitHub activity and open-source contributions")
+    
+    if len(feat.get("titles", [])) >= 2:
+        senior_t = ["senior", "lead", "principal", "architect", "head", "staff", "director", "founding"]
+        latest = feat["titles"][0]
+        if any(t in latest for t in senior_t):
+            future_fit.append("career progression to senior roles")
+
+    if future_fit:
+        s_future = f"FutureFit signals: {', '.join(future_fit)}."
+    else:
+        s_future = "Demonstrates consistent learning and technical growth."
+
+    # 4. Concerns & Behavioral Risks
+    concerns = []
+    if penalty > 0:
+        formatted_reasons = []
+        for r in risk_reasons:
+            fr = r.strip()
+            if fr:
+                if not any(fr.startswith(ac) for ac in ["AI", "ML", "JD"]):
+                    fr = fr[0].lower() + fr[1:]
+                formatted_reasons.append(fr)
+        if formatted_reasons:
+            concerns.append(f"profile inconsistencies ({'; '.join(formatted_reasons)})")
+            
+    if nd > 90:
+        concerns.append(f"extended notice period of {nd} days")
+    elif nd > 60:
+        concerns.append(f"notice period of {nd} days")
+        
+    unverified = []
+    for s in matched_skills:
+        if s in MUST_HAVE_SKILLS:
+            if not skill_has_synonym(combined, s):
+                unverified.append(s)
+    if unverified:
+        concerns.append(f"limited evidence of {', '.join(unverified[:2])} in career history")
+        
+    companies = feat.get("companies", [])
+    if companies:
+        consulting_count = sum(1 for c in companies if any(cf in str(c) for cf in CONSULTING_FIRMS))
+        if consulting_count > 0:
+            concerns.append(f"consulting background with {consulting_count} companies")
+
+    if concerns:
+        s_concerns = f"Concerns: {'; '.join(concerns).capitalize()}."
+    else:
+        s_concerns = "No significant risk factors or inconsistencies detected."
+
+    # 5. Recruitability & Availability
+    if recruit_index >= 80:
+        s_recruit = "Highly active, responsive, and available for recruitment."
+    elif recruit_index >= 50:
+        s_recruit = "Moderately active; responsiveness should be checked during initial outreach."
+    else:
+        s_recruit = "Inactive or passive candidate; responsiveness may be delayed."
+
+    reasoning = f"{s_intro} {s_skills} {s_strengths} {s_future} {s_concerns} {s_recruit}"
+    return reasoning
 
 
 # ─────────────────────────────────────────────
@@ -584,6 +1036,19 @@ def main():
     candidates = load_candidates()
     jd_text    = load_jd()
     print_audit(candidates)
+
+    # Debiasing Layer: anonymize candidate records and strip demographic fields
+    print("Applying demographic de-biasing layer...")
+    orig_to_anon = {}
+    anon_to_orig = {}
+    debiased_candidates = []
+    for idx, c in enumerate(candidates):
+        orig_id = c.get("candidate_id", f"CAND_{idx+1:07d}")
+        anon_id = f"ANON_{idx+1:07d}"
+        orig_to_anon[orig_id] = anon_id
+        anon_to_orig[anon_id] = orig_id
+        debiased_candidates.append(debias_candidate(c, anon_id))
+    candidates = debiased_candidates
 
     # Extract features
     print("Extracting features...")
@@ -683,6 +1148,7 @@ def main():
 
     # ── Export submission CSV (top 100 only, required format) ──
     top100 = df[df["rank"] <= 100][["candidate_id", "rank", "score", "reasoning"]].copy()
+    top100["candidate_id"] = top100["candidate_id"].map(anon_to_orig)
     top100.to_csv(SUBMISSION_FILE, index=False, encoding="utf-8")
     print(f"\n  Submission file saved: {SUBMISSION_FILE} ({len(top100)} rows)")
 
@@ -690,7 +1156,9 @@ def main():
     full_cols = ["rank", "candidate_id", "score", "career_score", "skill_score",
                  "recruitability_index", "semantic_score", "risk_penalty",
                  "years_exp", "notice_days", "matched_skills", "reasoning"]
-    df[full_cols].to_csv(FULL_OUTPUT, index=False, encoding="utf-8")
+    df_full = df[full_cols].copy()
+    df_full["candidate_id"] = df_full["candidate_id"].map(anon_to_orig)
+    df_full.to_csv(FULL_OUTPUT, index=False, encoding="utf-8")
     print(f"  Full output saved: {FULL_OUTPUT} ({len(df):,} rows)")
     print("\n  TalentLens complete.\n")
 
