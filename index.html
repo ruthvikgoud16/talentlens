@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentLens — Candidate Discovery & Ranking Hub</title>
+    <meta name="description" content="TalentLens: An AI-powered candidate ranking engine for the Redrob Hackathon. Discover and rank 100,000 candidates with full demographic de-biasing and transparent explainability.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B1020;
+            --surface: rgba(15, 23, 42, 0.65);
+            --surface-hover: rgba(30, 41, 59, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --text: #FFFFFF;
+            --text-muted: #94A3B8;
+            --text-dim: #64748B;
+            --white: #FFFFFF;
+            --emerald: #00D9A5;
+            --emerald-glow: rgba(0, 217, 165, 0.25);
+            --purple: #8B5CF6;
+            --purple-glow: rgba(139, 92, 246, 0.25);
+            --cyan: #38BDF8;
+            --cyan-glow: rgba(56, 189, 248, 0.25);
+            --gold: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.25);
+            --coral: #FF7F50;
+            --coral-glow: rgba(255, 127, 80, 0.25);
+            --font: 'Inter', sans-serif;
+            --mono: 'Fira Code', monospace;
+            --radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== AURORA BACKGROUND ===== */
+        .aurora-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -3;
+            overflow: hidden;
+            pointer-events: none;
+            background: #0B1020;
+        }
+
+        .aurora-blob {
+            position: absolute;
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.16;
+            mix-blend-mode: screen;
+            animation: aurora-move 25s infinite alternate ease-in-out;
+        }
+
+        .aurora-1 {
+            top: -200px; left: -200px;
+            background: radial-gradient(circle, var(--purple) 0%, transparent 80%);
+        }
+
+        .aurora-2 {
+            top: -300px; right: -100px;
+            background: radial-gradient(circle, var(--cyan) 0%, transparent 80%);
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .aurora-3 {
+            bottom: -200px; left: 20%;
+            background: radial-gradient(circle, var(--emerald) 0%, transparent 80%);
+            animation-duration: 28s;
+            animation-delay: -10s;
+        }
+
+        @keyframes aurora-move {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            50% { transform: translate(120px, -80px) scale(1.1) rotate(180deg); }
+            100% { transform: translate(-80px, 100px) scale(0.9) rotate(360deg); }
+        }
+
+        /* ===== FLOATING 3D GLASS OBJECTS ===== */
+        .floating-objects {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -2;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .float-obj {
+            position: absolute;
+            animation: floating-anim 18s infinite alternate ease-in-out;
+            opacity: 0.15;
+        }
+
+        .glass-sphere-1 {
+            top: 15%; left: 8%;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(139, 92, 246, 0.1) 40%, rgba(0, 0, 0, 0.4) 90%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 10px 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .glass-sphere-2 {
+            bottom: 25%; right: 8%;
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18) 0%, rgba(56, 189, 248, 0.12) 55%, rgba(0, 0, 0, 0.5) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: inset -8px -8px 25px rgba(0,0,0,0.6), 15px 15px 40px rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            animation-duration: 24s;
+            animation-delay: -3s;
+        }
+
+        @keyframes floating-anim {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(4deg); }
+            100% { transform: translateY(12px) rotate(-4deg); }
+        }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            background: rgba(11, 16, 32, 0.75);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 0 20px var(--cyan-glow);
+            transition: transform 0.4s ease;
+        }
+        
+        .header-brand:hover .brand-icon {
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--cyan);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+        }
+
+        .header-pills {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pill.active {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        /* ===== MAIN HUB HERO ===== */
+        .hub-container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 80px 48px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-section {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 64px;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0, 217, 165, 0.08);
+            border: 1px solid rgba(0, 217, 165, 0.2);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--emerald);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .hero-section h2 {
+            font-size: clamp(2.4rem, 5vw, 3.8rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            color: var(--white);
+        }
+
+        .hero-section h2 .highlight {
+            background: linear-gradient(135deg, var(--white) 20%, var(--cyan) 60%, var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.2));
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* ===== GATEWAY CARDS ===== */
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 64px;
+        }
+
+        @media (max-width: 768px) {
+            .gateway-grid {
+                grid-template-columns: 1fr;
+            }
+            .site-header {
+                padding: 16px 24px;
+            }
+            .hub-container {
+                padding: 40px 24px;
+            }
+        }
+
+        .gateway-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.15),
+                0 25px 35px -8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .gateway-card.dashboard::before {
+            background: linear-gradient(to right, var(--cyan), var(--purple));
+        }
+
+        .gateway-card.demo::before {
+            background: linear-gradient(to right, var(--emerald), var(--cyan));
+        }
+
+        .gateway-card:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(1deg) translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 
+                0 12px 24px -3px rgba(0, 0, 0, 0.2),
+                0 40px 60px -12px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        .card-header {
+            margin-bottom: 28px;
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+            display: inline-block;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .card-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-item {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .feature-item::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--cyan);
+        }
+
+        .gateway-card.demo .feature-item::before {
+            color: var(--emerald);
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-cyan {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            color: #0B1020;
+            box-shadow: 0 4px 15px var(--cyan-glow);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-cyan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.45);
+        }
+
+        .btn-emerald {
+            background: linear-gradient(135deg, var(--emerald), var(--cyan));
+            color: #0B1020;
+            box-shadow: 0 4px 15px var(--emerald-glow);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-emerald:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 217, 165, 0.45);
+        }
+
+        /* ===== RESOURCE LINKS ===== */
+        .resources-row {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .resources-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .resources-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .res-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s ease;
+        }
+
+        .res-link:hover {
+            color: var(--cyan);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 40px 48px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+            backdrop-filter: blur(10px);
+            background: rgba(11, 16, 32, 0.5);
+            margin-top: auto;
+        }
+
+        footer a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            footer {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            .resources-row {
+                flex-direction: column;
+                padding: 24px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== AURORA BACKGROUND ===== -->
+<div class="aurora-bg">
+    <div class="aurora-blob aurora-1"></div>
+    <div class="aurora-blob aurora-2"></div>
+    <div class="aurora-blob aurora-3"></div>
+</div>
+
+<!-- ===== FLOATING OBJECTS ===== -->
+<div class="floating-objects">
+    <div class="float-obj glass-sphere-1"></div>
+    <div class="float-obj glass-sphere-2"></div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+    <div class="header-brand">
+        <div class="brand-icon">🔭</div>
+        <div class="brand-text">
+            <h1>TalentLens</h1>
+            <p>Redrob Hackathon · 2026</p>
+        </div>
+    </div>
+    <div class="header-pills">
+        <div class="pill active">Project Hub</div>
+        <div class="pill">Ruthvik Goud</div>
+        <div class="pill">Solo Entry</div>
+    </div>
+</header>
+
+<!-- ===== HUB WORKSPACE ===== -->
+<main class="hub-container">
+    <div class="hero-section">
+        <div class="hero-eyebrow">Redrob Hackathon Submission</div>
+        <h2>
+            Explainable Multi-Signal<br>
+            <span class="highlight">Candidate Ranking Platform</span>
+        </h2>
+        <p class="hero-desc">
+            An advanced local discovery and evaluation suite matching 100,000 candidates to a Senior AI Engineer job description. Uses demographic de-biasing, synonym skill extraction, availablity auditing, and transparent explainability models.
+        </p>
+    </div>
+
+    <!-- GATEWAY WORKSPACES -->
+    <div class="gateway-grid">
+        <!-- Interactive Dashboard -->
+        <div class="gateway-card dashboard">
+            <div class="card-header">
+                <span class="card-icon">🚀</span>
+                <h3 class="card-title">Interactive Dashboard</h3>
+                <p class="card-desc">
+                    A fully-featured interactive recruiting workspace mapping candidates to roles through visual AI pipeline stages.
+                </p>
+            </div>
+            <ul class="feature-list">
+                <li class="feature-item">Interactive JD Keyword Extraction &amp; Parsing.</li>
+                <li class="feature-item">Real-time candidate search simulation with vector projection.</li>
+                <li class="feature-item">Finalist radar comparison charts and side-by-side delta comparisons.</li>
+                <li class="feature-item">Pre-loaded step-by-step Interactive Guided Walkthrough.</li>
+            </ul>
+            <a href="talentlens_x.html" class="btn-action btn-cyan">
+                Launch Workspace Dashboard &rarr;
+            </a>
+        </div>
+
+        <!-- Static Demo Viewer -->
+        <div class="gateway-card demo">
+            <div class="card-header">
+                <span class="card-icon">🏆</span>
+                <h3 class="card-title">Submission Demo Viewer</h3>
+                <p class="card-desc">
+                    A clean, fast static result viewer displaying the finalized top 100 monotonically ranked candidates.
+                </p>
+            </div>
+            <ul class="feature-list">
+                <li class="feature-item">Top 3 Gold/Silver/Bronze candidate 3D podium.</li>
+                <li class="feature-item">Traceable recruiter reasoning strings for all top 100 entries.</li>
+                <li class="feature-item">Score filter controls (Top 10, Top 25, high recruitability).</li>
+                <li class="feature-item">Fully responsive layout with inline table detail expansion.</li>
+            </ul>
+            <a href="submission_demo.html" class="btn-action btn-emerald">
+                Open Submission Demo &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- RESOURCE HUB -->
+    <div class="resources-row">
+        <div class="resources-title">
+            📂 Project Resources:
+        </div>
+        <div class="resources-links">
+            <a href="https://github.com/ruthvikgoud16/talentlens" target="_blank" class="res-link">
+                ⬡ GitHub Repo
+            </a>
+            <a href="https://github.com/ruthvikgoud16/talentlens#readme" target="_blank" class="res-link">
+                📖 Documentation
+            </a>
+            <a href="https://github.com/ruthvikgoud16/talentlens/raw/main/assets/video/aether_demo_flow.webp" target="_blank" class="res-link">
+                ▶ Watch Demo Video
+            </a>
+            <a href="submission.csv" class="res-link">
+                📊 submission.csv
+            </a>
+        </div>
+    </div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div>
+        <strong>TalentLens</strong> — Redrob Hackathon Submission 2026 &nbsp;·&nbsp;
+        Developer: <strong>Ruthvik Goud</strong> &nbsp;·&nbsp;
+        <a href="mailto:bathiniruthvik370@gmail.com">bathiniruthvik370@gmail.com</a>
+    </div>
+    <div>
+        <a href="https://github.com/ruthvikgoud16/talentlens" target="_blank">GitHub Repo</a>
+        &nbsp;·&nbsp;
+        <a href="https://www.linkedin.com/in/ruthvikgoud" target="_blank">LinkedIn</a>
+    </div>
+</footer>
+
+</body>
+</html>
