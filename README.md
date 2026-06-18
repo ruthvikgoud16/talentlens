@@ -204,13 +204,13 @@ When launching `talentlens_x.html`, you can trigger the **Autoplay Demo Mode** t
 ```text
 talentlens/
 │
-├──/--assets
-│   
-│   │   
-│   │   
-│   │   
-│   │   
-│   │  
+├── assets/
+│   ├── docs/
+│   │   ├── demo_script.md               # Script for manual/auto demo flows
+│   │   ├── recording_guide.md           # Instructions for capturing demo video
+│   │   ├── scene_storyboard.md          # Storyboard outlining the scenes
+│   │   ├── shot_list.md                 # Detailed visual shot sequence
+│   │   └── subtitle_timeline.srt        # Timed subtitles for video
 │   ├── screenshots/
 │   │   ├── dashboard_view.png           # Interactive app landing screenshot
 │   │   ├── workflow_stepper.png         # Live stepper animation screenshot
@@ -220,7 +220,8 @@ talentlens/
 │   │   ├── analytics_charts.png         # SVG charts screenshot
 │   │   └── talentlens_architecture.png  # System architecture diagram
 │   └── video/
-│       └── aether_demo_flow.webp        # Walkthrough demo animation
+│       ├── aether_demo_flow.webp        # Walkthrough demo animation
+│       └── demo.mp4                     # Recorded product demo walkthrough video
 │
 ├── app.py                           # Local Candidate Ranking Engine
 ├── test_app.py                      # Integration testing suite

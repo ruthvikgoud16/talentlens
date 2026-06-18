@@ -81,7 +81,7 @@ Follow the [`scene_storyboard.md`](scene_storyboard.md) and [`shot_list.md`](sho
 | Resolution | 1920×1080 |
 | Frame Rate | 60 FPS |
 | Duration | 60–90 seconds |
-| Output File | `assets/demo.mp4` |
+| Output File | `assets/video/demo.mp4` |
 
 ---
 
