@@ -13,7 +13,7 @@
 ## 🏆 Hackathon Submission Details
 
 * **GitHub Repository:** [https://github.com/ruthvikgoud16/talentlens](https://github.com/ruthvikgoud16/talentlens)
-* **Demo Video Animation:** [Watch Demo WebP Animation](assets/aether_demo_flow.webp)
+* **Demo Video Animation:** [Watch Demo WebP Animation](assets/video/aether_demo_flow.webp)
 * **Interactive Dashboard:** [talentlens_x.html](talentlens_x.html) *(Double-click to run locally in any browser)*
 * **Submission Demo Viewer:** [submission_demo.html](submission_demo.html) *(Double-click to view the static candidate comparison dashboard)*
 * **Contact Email:** [bathiniruthvik370@gmail.com](mailto:bathiniruthvik370@gmail.com)
@@ -146,13 +146,22 @@ When launching `talentlens_x.html`, you can trigger the **Autoplay Demo Mode** t
 talentlens/
 │
 ├── assets/
-│   ├── aether_demo_flow.webp        # Walkthrough demo animation
-│   ├── dashboard_view.png           # Interactive app landing screenshot
-│   ├── workflow_stepper.png         # Live stepper animation screenshot
-│   ├── candidate_comparison.png     # Side-by-side Rank 1 vs 2 screenshot
-│   ├── top_podium.png               # Top 3 candidate podium screenshot
-│   ├── evidence_panel.png           # Truth Engine checked evidence screenshot
-│   └── analytics_charts.png         # SVG charts screenshot
+│   ├── docs/
+│   │   ├── demo_script.md               # Demo narration script
+│   │   ├── recording_guide.md           # Screen recording instructions
+│   │   ├── scene_storyboard.md          # Visual scene descriptions
+│   │   ├── shot_list.md                 # Shot-by-shot timing table
+│   │   └── subtitle_timeline.srt        # Video subtitle file
+│   ├── screenshots/
+│   │   ├── dashboard_view.png           # Interactive app landing screenshot
+│   │   ├── workflow_stepper.png         # Live stepper animation screenshot
+│   │   ├── candidate_comparison.png     # Side-by-side Rank 1 vs 2 screenshot
+│   │   ├── top_podium.png               # Top 3 candidate podium screenshot
+│   │   ├── evidence_panel.png           # Truth Engine checked evidence screenshot
+│   │   ├── analytics_charts.png         # SVG charts screenshot
+│   │   └── talentlens_architecture.png  # System architecture diagram
+│   └── video/
+│       └── aether_demo_flow.webp        # Walkthrough demo animation
 │
 ├── app.py                           # Local Candidate Ranking Engine
 ├── test_app.py                      # Integration testing suite
@@ -199,30 +208,30 @@ Open your browser and navigate to either:
 ## 📸 12. Screenshot Gallery
 
 ### A. Dashboard Landing View
-![Dashboard](assets/dashboard_view.png)
+![Dashboard](assets/screenshots/dashboard_view.png)
 
 ### B. Live Workflow Stepper
-![Workflow Stepper](assets/workflow_stepper.png)
+![Workflow Stepper](assets/screenshots/workflow_stepper.png)
 
 ### C. Top Candidate Podium & Results Table
-![Top Podium](assets/top_podium.png)
+![Top Podium](assets/screenshots/top_podium.png)
 
 ### D. Truth Engine Evidence Panel
-![Evidence Panel](assets/evidence_panel.png)
+![Evidence Panel](assets/screenshots/evidence_panel.png)
 
 ### E. Side-by-Side Candidate Comparison
-![Candidate Comparison](assets/candidate_comparison.png)
+![Candidate Comparison](assets/screenshots/candidate_comparison.png)
 
 ### F. SVG Analytics Dashboard
-![Analytics](assets/analytics_charts.png)
+![Analytics](assets/screenshots/analytics_charts.png)
 
 ---
 
 ## 📈 13. Ranking Results Overview
 
-- **Top Candidate (Rank #1):** `CAND_0018499` (Final Score: `87.26`). Lead ML Engineer with deep, verified embeddings experience, 5+ production retrieval pipeline accomplishments, and a short 15-day notice period.
-- **Monotonically Decreasing Scores:** Candidate scores range from `87.26` down to `59.38` for Rank #100.
-- **Ties Handled Compliantly:** Ties are successfully broken using ascending candidate ID checks.
+- **Top Candidate (Rank #1):** `CAND_0086022` (Final Score: `77.24`). Senior Applied Scientist with strong embeddings, vector DB, and retrieval experience. 4+ embedding hits, GitHub activity score 75/100.
+- **Monotonically Decreasing Scores:** Candidate scores range from `77.24` down to approx `54` for Rank #100.
+- **Ties Handled Compliantly:** Ties broken using ascending candidate ID as tiebreaker.
 
 ---
 
