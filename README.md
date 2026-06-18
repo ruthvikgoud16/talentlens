@@ -197,7 +197,7 @@ When launching `talentlens_x.html`, you can trigger the **Autoplay Demo Mode** t
 ```text
 talentlens/
 │
-├──/--
+├──/--assets
 │   
 │   │   
 │   │   
