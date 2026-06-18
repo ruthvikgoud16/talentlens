@@ -13,7 +13,6 @@
 ## 🏆 Hackathon Submission Details
 
 * **GitHub Repository:** [https://github.com/ruthvikgoud16/talentlens](https://github.com/ruthvikgoud16/talentlens)
-* **Demo Video Animation:** [Watch Demo WebP Animation](assets/video/aether_demo_flow.webp)
 * **Interactive Dashboard:** [talentlens_x.html](talentlens_x.html) *(Double-click to run locally in any browser)*
 * **Submission Demo Viewer:** [submission_demo.html](submission_demo.html) *(Double-click to view the static candidate comparison dashboard)*
 * **Contact Email:** [bathiniruthvik370@gmail.com](mailto:bathiniruthvik370@gmail.com)
