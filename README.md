@@ -36,6 +36,14 @@ Access the main entry point to TalentLens:
 https://talentlens-inky.vercel.app/
 ```
 
+### 📖 Project Pitch Deck
+
+Access the 12-slide project pitch deck:
+
+```text
+pitch_deck.md
+```
+
 ---
 
 ## 🔗 Repository
@@ -67,6 +75,7 @@ https://linkedin.com/in/ruthvikgoud
 | Homepage              | `https://talentlens-inky.vercel.app/`                           |
 | Submission Demo       | `https://talentlens-inky.vercel.app/submission_demo.html`       |
 | Interactive Dashboard | `https://talentlens-inky.vercel.app/talentlens_x.html`          |
+| Project Pitch Deck    | `pitch_deck.md`                                                 |
 | GitHub Repository     | `https://github.com/ruthvikgoud16/talentlens`                   |
 | Developer Profile     | `https://github.com/ruthvikgoud16`                              |
 | LinkedIn              | `https://linkedin.com/in/ruthvikgoud`                           |
